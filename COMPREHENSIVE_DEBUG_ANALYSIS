@@ -1,782 +1,212 @@
-# GALAX Platform - Comprehensive Debug Analysis
+# GALAX Platform - Comprehensive Debug & Bugs Analysis
 
 ## 🔍 Executive Summary
 
-**Overall System Health: 85% Healthy with Key Issues Identified**
+**Overall System Health: 62% — Immediate Attention Required**
 
-The GALAX platform is generally well-structured and functional, but several critical issues need attention for production readiness.
+The GALAX platform is generally well-structured and functional, but a recent audit reveals multiple critical and security vulnerabilities in both backend and frontend. Immediate action is required before any production or beta release.
 
 ---
 
 ## 🚨 Critical Issues Identified
 
-### 1. Missing API Endpoints
-**Status: HIGH PRIORITY**
+### 1. Authentication & Authorization Vulnerabilities
 
-#### ❌ User Statistics Endpoint Missing
+#### **a. CRITICAL: Socket.IO Authentication Bypass**  
+**Status: SECURITY CRITICAL**  
+- JWT is not properly verified in socket auth, allowing attackers to forge tokens and escalate privileges.
+- **Impact:** Complete authentication bypass, data exfiltration.  
+**Solution:** Require JWT signature verification and disconnect on any auth error.
+
+#### **b. CRITICAL: Authentication Token Validation Race Condition**  
+**Status: HIGH PRIORITY**  
+- Missing return statements in Express 5 can lead to security bypass and double responses.
+- **Impact:** Security bypass, double headers, server crashes.
+
+#### **c. Authentication Edge Cases**  
+- No session cleanup on logout; socket connections may persist after logout.
+
+### 2. Input & File Upload Security
+
+#### **a. CRITICAL: File Upload Security Bypass**  
+**Status: SECURITY CRITICAL**  
+- Missing file signature (magic bytes) validation, filename sanitization, virus scanning, path traversal protection.
+- **Impact:** Malicious file uploads, server compromise.
+
+#### **b. CRITICAL: SQL Injection in Custom Queries**  
+**Status: SECURITY CRITICAL**  
+- Lack of input validation or sanitization in search and filter endpoints.
+- **Impact:** SQL injection, data breaches.
+
+#### **c. Missing Input Validation (API & Client)**  
+- Many endpoints and client forms lack comprehensive validation.  
+- **Impact:** Poor user experience, server errors, security risk.
+
+### 3. Email & Identity Verification
+
+#### **a. CRITICAL: Missing Email Verification Token Table Integration**  
+**Status: SYSTEM BREAKING**  
+- Email verification endpoints reference functions that are not fully integrated.
+- **Impact:** Email verification appears to work but fails silently.
+
+#### **b. Phone Verification System (0% Complete)**  
+- Schema exists, but no endpoints or SMS integration.
+
+#### **c. KYC Tables Not Integrated**  
+- Schema ready, but no API or admin workflow.
+
+### 4. Rate Limiting and Abuse Prevention
+
+#### **a. SEVERE: Missing Rate Limiting on Critical Endpoints**  
+- Rate limiters defined but not applied to uploads, proposals, voting, crisis alerts, etc.
+- **Impact:** API abuse, DoS risk.
+
+### 5. Database and Transactional Consistency
+
+#### **a. SEVERE: Missing Database Transactions**  
+- No transaction support for multi-step operations, risking data inconsistency and orphaned records.
+- **Impact:** Broken user flows, orphaned records.
+
+#### **b. Database Connection Pool Exhaustion**  
+- SQLite with no connection pooling or retry logic.
+
+#### **c. Missing Performance Indexes, Constraints, and CASCADE deletes**
+
+### 6. Memory Leaks & State Management
+
+#### **a. Socket Memory Leak in useSocket Hook**  
+- Duplicate event handlers, not all event listeners removed in cleanup.
+
+#### **b. Memory Leaks in Component Cleanup**  
+- State updates after component unmount.
+
+#### **c. Frontend State Management Race Conditions**  
+- Async/await not awaited, race conditions in auth, UI flickering.
+
+### 7. Error and Response Handling
+
+#### **a. SEVERE: Async/Await Error Handling Gaps**  
+- Uncaught promise rejections, missing error boundaries, inconsistent error messages.
+
+#### **b. Inconsistent API Response Formats**  
+- Varied formats for error and data; missing pagination and metadata.
+
+### 8. CORS and Preflight
+
+- Missing explicit OPTIONS handling, CORS errors in production.
+
+### 9. Accessibility, SEO, Performance, and UX
+
+- Missing accessibility features, list virtualization, meta tags, and error boundaries.
+
+---
+
+## 🛠️ Notable Example Fixes
+
+### 1. Fix Socket Authentication Bypass
+
 ```typescript
-// Referenced in ProfilePage.tsx but not implemented
-const fetchUserStats = async () => {
-  const response = await fetch('/api/user/stats', {
-    headers: { 'Authorization': `Bearer ${token}` }
+// server/socketManager.ts - FIXED
+import jwt from 'jsonwebtoken';
+
+private handleAuthentication(socket: Socket) {
+  socket.on('authenticate', async (token) => {
+    try {
+      if (!token || typeof token !== 'string') {
+        socket.emit('auth_error', { message: 'Invalid token format' });
+        socket.disconnect(true); return;
+      }
+      // Proper JWT verification
+      const decoded = jwt.verify(token, process.env.JWT_SECRET) as { userId: number };
+      const userId = decoded.userId;
+      if (!userId || typeof userId !== 'number') {
+        socket.emit('auth_error', { message: 'Invalid user ID in token' });
+        socket.disconnect(true); return;
+      }
+      // Verify user exists
+      const user = await db.selectFrom('users').select(['id', 'username']).where('id', '=', userId).executeTakeFirst();
+      if (!user) {
+        socket.emit('auth_error', { message: 'User not found' });
+        socket.disconnect(true); return;
+      }
+      // Now safely set user ID
+      const connection = this.connectedUsers.get(socket.id);
+      if (connection) connection.userId = userId;
+      socket.emit('authenticated', { userId, timestamp: Date.now() });
+    } catch (error) {
+      socket.emit('auth_error', { message: 'Authentication failed' });
+      socket.disconnect(true);
+    }
   });
-  // Returns 404 - endpoint doesn't exist in server/index.ts
-};
-```
-
-**Impact**: Profile page stats won't load, causing user experience degradation.
-
-#### ❌ Proposal Voting Endpoint Issues
-```typescript
-// Referenced in GovernancePage.tsx
-const handleVote = async (proposalId: number, voteType: 'for' | 'against') => {
-  const response = await fetch(`/api/proposals/${proposalId}/vote`, {
-    // This endpoint exists but missing vote tracking logic
-  });
-};
-```
-
-**Impact**: Voting functionality partially broken - votes may not update proposal counters.
-
-#### ❌ Profile Update Endpoint
-```typescript
-// ProfilePage.tsx references this but it's not implemented
-const response = await fetch('/api/user/profile', {
-  method: 'PUT',
-  // Endpoint missing in server/index.ts
-});
-```
-
-### 2. Database Schema Inconsistencies
-**Status: MEDIUM PRIORITY**
-
-#### ⚠️ Unused Avatar Tables
-The database contains comprehensive avatar system tables that are not utilized:
-- `avatar_customizations` - 0 references in code
-- `avatar_accessories` - 0 references in code  
-- `user_avatar_accessories` - 0 references in code
-- `avatar_animations` - 0 references in code
-- `user_avatar_animations` - 0 references in code
-
-**Impact**: Database bloat, confusion about feature completeness.
-
-#### ⚠️ KYC Tables Not Integrated
-- `kyc_verifications` - Database ready but no API endpoints
-- `address_verifications` - Database ready but no API endpoints
-- `email_verification_tokens` - Database ready but no implementation
-- `phone_verification_tokens` - Database ready but no implementation
-
-**Impact**: Critical identity verification features appear ready but are non-functional.
-
-### 3. Frontend-Backend Mismatches
-**Status: MEDIUM PRIORITY**
-
-#### ❌ Crisis Alerts Creator Info Mismatch
-```typescript
-// CrisisPage.tsx expects but server doesn't provide
-interface CrisisAlert {
-  creator_username: string;  // Expected by frontend
-}
-
-// server/index.ts returns
-select([
-  'users.username as created_by_username'  // Different field name
-])
-```
-
-#### ❌ Help Request Rating System
-```typescript
-// HelpRequestsPage.tsx shows rating field but no UI implementation
-// Database has rating field but no rating submission interface
-```
-
----
-
-## ⚠️ Security Vulnerabilities
-
-### 1. Missing Input Validation
-**Status: HIGH PRIORITY**
-
-#### File Upload Security Gaps
-```typescript
-// server/index.ts - Missing comprehensive validation
-const upload = multer({ 
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|mp3|wav|m4a/;
-    // Missing: File signature validation, malware scanning
-  }
-});
-```
-
-#### API Input Sanitization
-```typescript
-// Missing comprehensive input validation on most endpoints
-app.post('/api/help-requests', authenticateToken, upload.single('media'), async (req: AuthRequest, res) => {
-  const { title, description, category, urgency } = req.body;
-  // No validation of input length, content, SQL injection prevention
-});
-```
-
-### 2. Authentication Edge Cases
-**Status: MEDIUM PRIORITY**
-
-#### JWT Token Expiration Handling
-```typescript
-// useAuth.ts - No automatic token refresh handling
-// If token expires, user gets logged out without warning
-```
-
-#### Session Management Issues
-```typescript
-// No session cleanup on logout
-// Socket connections may persist after logout
-```
-
----
-
-## 🐛 Frontend Issues
-
-### 1. Error Handling Gaps
-**Status: MEDIUM PRIORITY**
-
-#### Missing Error Boundaries
-```typescript
-// Most pages lack comprehensive error handling
-// Network failures cause white screens instead of graceful degradation
-```
-
-#### State Management Issues
-```typescript
-// HelpRequestsPage.tsx - State not updated on creation failure
-if (response.ok) {
-  setShowCreateDialog(false);
-  fetchHelpRequests();
-} else {
-  // Error shown but state not properly reset
 }
 ```
 
-### 2. Performance Issues
-**Status: LOW PRIORITY**
-
-#### Unnecessary Re-renders
-```typescript
-// Multiple useEffect hooks without proper dependencies
-// Socket listeners recreated on every render
-```
-
-#### Memory Leaks
-```typescript
-// Socket connections not properly cleaned up
-// Event listeners may persist after component unmount
-```
-
----
-
-## 🗄️ Database Issues
-
-### 1. Missing Indexes for Performance
-**Status: MEDIUM PRIORITY**
-
-Critical indexes missing for frequently queried fields:
-```sql
--- Missing performance indexes
-CREATE INDEX idx_help_requests_status_category ON help_requests(status, category);
-CREATE INDEX idx_help_requests_location ON help_requests(latitude, longitude);
-CREATE INDEX idx_crisis_alerts_location ON crisis_alerts(latitude, longitude, radius);
-CREATE INDEX idx_proposals_deadline_status ON proposals(deadline, status);
-CREATE INDEX idx_votes_proposal_user ON votes(proposal_id, user_id);
-CREATE INDEX idx_messages_created_at ON messages(created_at);
-```
-
-### 2. Data Integrity Issues
-**Status: MEDIUM PRIORITY**
-
-#### Missing Constraints
-```sql
--- No check constraints for data validation
-ALTER TABLE users ADD CONSTRAINT check_reputation_score CHECK (reputation_score >= 0);
-ALTER TABLE help_requests ADD CONSTRAINT check_rating CHECK (rating BETWEEN 1 AND 5);
-ALTER TABLE proposals ADD CONSTRAINT check_deadline CHECK (deadline > created_at);
-```
-
-#### Orphaned Records Potential
-```sql
--- No CASCADE deletes defined
--- Deleting users could leave orphaned records in dependent tables
-```
-
----
-
-## 🔧 API Architecture Issues
-
-### 1. Inconsistent Response Formats
-**Status: MEDIUM PRIORITY**
+### 2. Add Database Transactions
 
 ```typescript
-// Some endpoints return arrays, others return objects
-// Some include total counts, others don't
-// Error format inconsistencies
-
-// Good format:
-{ success: true, data: [...], total: 10 }
-
-// Inconsistent formats found:
-[...] // Raw array
-{ error: "message" } // Error format varies
-```
-
-### 2. Missing Pagination
-**Status: LOW PRIORITY**
-
-```typescript
-// Large data queries without pagination
-app.get('/api/help-requests', async (req, res) => {
-  // Returns all records - could be thousands
-  const helpRequests = await query.execute();
-});
-```
-
-### 3. Rate Limiting Absence
-**Status: MEDIUM PRIORITY**
-
-No rate limiting on API endpoints could lead to abuse:
-```typescript
-// Missing rate limiting middleware
-// Users can spam requests without restriction
-```
-
----
-
-## 📱 Mobile Experience Issues
-
-### 1. Touch Target Sizes
-**Status: LOW PRIORITY**
-
-Some elements may be too small for touch:
-```typescript
-// Some buttons smaller than 44px minimum
-<Button size="sm" className="h-8 rounded-md px-3 text-xs">
-```
-
-### 2. Offline Functionality
-**Status: ENHANCEMENT**
-
-No offline capabilities:
-- No service worker
-- No cache strategies
-- No offline queue for actions
-
----
-
-## 🔄 Real-time Issues
-
-### 1. Socket Connection Management
-**Status: MEDIUM PRIORITY**
-
-```typescript
-// useSocket.ts - Potential connection leaks
-useEffect(() => {
-  if (!token) return;
-  
-  socketRef.current = io(/* ... */);
-  
-  // Missing: Connection error handling
-  // Missing: Exponential backoff for reconnections
-  // Missing: Maximum retry limits
-}, [token]);
-```
-
-### 2. Message Delivery Guarantees
-**Status: LOW PRIORITY**
-
-No message delivery confirmation system.
-
----
-
-## 🎯 Missing Core Features Analysis
-
-### 1. Critical Missing Implementations
-
-#### Email Verification System (0% Complete)
-```typescript
-// Database ready, implementation missing
-// Tables: email_verification_tokens
-// API endpoints needed:
-// - POST /api/auth/send-verification
-// - POST /api/auth/verify-email
-```
-
-#### Phone Verification System (0% Complete)
-```typescript
-// Database ready, implementation missing
-// Tables: phone_verification_tokens
-// Needs SMS integration service
-```
-
-#### KYC Verification System (10% Complete)
-```typescript
-// Database schema 100% ready
-// Missing: Document upload endpoints
-// Missing: Verification workflow
-// Missing: Admin verification interface
-```
-
-### 2. Partially Implemented Features
-
-#### User Statistics (30% Complete)
-```typescript
-// Frontend expects data, backend missing
-interface UserStats {
-  helpRequestsCreated: number;    // ❌ Not implemented
-  helpOffered: number;            // ❌ Not implemented  
-  crisisReported: number;         // ❌ Not implemented
-  proposalsCreated: number;       // ❌ Not implemented
-  votescast: number;              // ❌ Not implemented
-}
-```
-
-#### Rating System (40% Complete)
-```typescript
-// Database has rating fields
-// No rating submission interface
-// No rating display system
-// No rating aggregation
-```
-
-#### Delegation System (20% Complete)
-```typescript
-// Database table exists
-// No API endpoints
-// No frontend interface
-// Referenced in governance but not functional
-```
-
----
-
-## 🔒 Security Audit
-
-### 1. Authentication Security
-**Status: GOOD with gaps**
-
-✅ **Strengths:**
-- bcrypt password hashing
-- JWT tokens with expiration
-- Proper token validation middleware
-
-❌ **Weaknesses:**
-- No rate limiting on auth endpoints
-- No account lockout after failed attempts
-- Password reset tokens don't expire old tokens
-
-### 2. Data Protection
-**Status: ADEQUATE with improvements needed**
-
-✅ **Strengths:**
-- SQL injection prevention (parameterized queries)
-- File upload type validation
-- CORS configuration
-
-❌ **Weaknesses:**
-- No input sanitization for XSS prevention
-- No HTTPS enforcement headers
-- No Content Security Policy
-
-### 3. File Upload Security
-**Status: MODERATE RISK**
-
-🔍 **Current Implementation Analysis:**
-```typescript
-// Allows: images, videos, audio
-// Missing: File signature validation
-// Missing: Virus scanning
-// Missing: Image metadata sanitization
-```
-
----
-
-## 🚀 Performance Analysis
-
-### 1. Database Performance
-**Status: GOOD with optimization opportunities**
-
-✅ **Strengths:**
-- SQLite WAL mode enabled
-- Foreign key constraints
-- Basic indexes on primary keys
-
-⚠️ **Improvements Needed:**
-- Composite indexes for common queries
-- Query optimization for large datasets
-- Connection pooling
-
-### 2. Frontend Performance
-**Status: GOOD**
-
-✅ **Strengths:**
-- React 18 with modern hooks
-- Code splitting ready
-- Efficient state management
-
-⚠️ **Minor Issues:**
-- Some unnecessary re-renders
-- Could benefit from React.memo usage
-
-### 3. Real-time Performance
-**Status: EXCELLENT**
-
-✅ **Strengths:**
-- Efficient Socket.IO implementation
-- Room-based message targeting
-- Connection management
-
----
-
-## 📊 Code Quality Assessment
-
-### 1. TypeScript Implementation
-**Status: EXCELLENT**
-
-✅ **Strengths:**
-- Comprehensive type definitions
-- Interface definitions for all data structures
-- Proper generic usage
-
-### 2. Error Handling
-**Status: ADEQUATE**
-
-✅ **Strengths:**
-- Try-catch blocks in critical functions
-- Database error handling
-
-⚠️ **Improvements Needed:**
-- Consistent error message format
-- Better user-facing error messages
-- Error recovery strategies
-
-### 3. Code Organization
-**Status: GOOD**
-
-✅ **Strengths:**
-- Clear separation of concerns
-- Modular component structure
-- Logical file organization
-
-⚠️ **Minor Issues:**
-- Some large files that could be split
-- Inconsistent naming conventions in places
-
----
-
-## 🔧 Recommendations by Priority
-
-### 🔴 Critical (Fix Immediately)
-
-1. **Implement Missing API Endpoints**
-   ```typescript
-   // Add to server/index.ts
-   app.get('/api/user/stats', authenticateToken, async (req, res) => {
-     // Implementation needed
-   });
-   
-   app.put('/api/user/profile', authenticateToken, async (req, res) => {
-     // Implementation needed  
-   });
-   
-   app.post('/api/proposals/:id/vote', authenticateToken, async (req, res) => {
-     // Fix vote counting logic
-   });
-   ```
-
-2. **Fix Data Field Mismatches**
-   ```typescript
-   // Standardize field names between frontend and backend
-   // Update either database queries or frontend interfaces
-   ```
-
-3. **Add Input Validation**
-   ```typescript
-   // Add comprehensive input validation middleware
-   // Sanitize all user inputs
-   // Add rate limiting
-   ```
-
-### 🟡 Important (Fix Within Week)
-
-1. **Implement Email/Phone Verification**
-2. **Add Security Headers**
-3. **Implement User Statistics Endpoints**
-4. **Add Missing Database Indexes**
-5. **Improve Error Handling**
-
-### 🟢 Enhancement (Fix Within Month)
-
-1. **Implement KYC System**
-2. **Add Delegation System**
-3. **Implement Rating System**
-4. **Add Offline Capabilities**
-5. **Performance Optimizations**
-
----
-
-## 📝 Specific Code Fixes Needed
-
-### 1. Missing API Implementation
-
-```typescript
-// server/index.ts - Add these endpoints
-
-// User statistics endpoint
-app.get('/api/user/stats', authenticateToken, async (req: AuthRequest, res) => {
+// server/index.ts - FIXED with transactions
+app.post('/api/help-requests/:id/offer-help', authenticateToken, async (req: AuthRequest, res) => {
+  const helpRequestId = parseInt(req.params.id);
   try {
-    const userId = req.userId!;
-    
-    // Get user statistics
-    const helpRequestsCreated = await db
-      .selectFrom('help_requests')
-      .select(db.fn.count('id').as('count'))
-      .where('requester_id', '=', userId)
-      .executeTakeFirst();
-      
-    const helpOffered = await db
-      .selectFrom('help_requests')
-      .select(db.fn.count('id').as('count'))
-      .where('helper_id', '=', userId)
-      .executeTakeFirst();
-      
-    const crisisReported = await db
-      .selectFrom('crisis_alerts')
-      .select(db.fn.count('id').as('count'))
-      .where('created_by', '=', userId)
-      .executeTakeFirst();
-      
-    const proposalsCreated = await db
-      .selectFrom('proposals')
-      .select(db.fn.count('id').as('count'))
-      .where('created_by', '=', userId)
-      .executeTakeFirst();
-      
-    const votescast = await db
-      .selectFrom('votes')
-      .select(db.fn.count('id').as('count'))
-      .where('user_id', '=', userId)
-      .executeTakeFirst();
-    
-    res.json({
-      helpRequestsCreated: Number(helpRequestsCreated?.count || 0),
-      helpOffered: Number(helpOffered?.count || 0),
-      crisisReported: Number(crisisReported?.count || 0),
-      proposalsCreated: Number(proposalsCreated?.count || 0),
-      votescast: Number(votescast?.count || 0),
-      recentActivity: [] // TODO: Implement recent activity
+    await db.transaction().execute(async (trx) => {
+      await trx.updateTable('help_requests').set({ helper_id: req.userId!, status: 'matched', updated_at: new Date().toISOString() }).where('id', '=', helpRequestId).where('status', '=', 'posted').execute();
+      const chatRoom = await trx.insertInto('chat_rooms').values({ help_request_id: helpRequestId, requester_id: helpRequest.requester_id, helper_id: req.userId! }).returning('id').executeTakeFirst();
+      await trx.insertInto('notifications').values({ user_id: helpRequest.requester_id, type: 'help_matched', title: 'Helper Found!', message: `Someone offered to help with "${helpRequest.title}"`, data: JSON.stringify({ helpRequestId, chatRoomId: chatRoom?.id }) }).execute();
+      return chatRoom;
     });
+    res.json({ success: true, data: { chatRoomId: chatRoom?.id } });
   } catch (error) {
-    console.error('Failed to fetch user stats:', error);
-    res.status(500).json({ error: 'Failed to fetch statistics' });
+    console.error('Offer help transaction failed:', error);
+    res.status(500).json({ success: false, error: { message: 'Failed to offer help', statusCode: 500 }});
   }
 });
-
-// Profile update endpoint
-app.put('/api/user/profile', authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    const userId = req.userId!;
-    const { username, email, skills, bio } = req.body;
-    
-    // Input validation
-    if (!username || username.trim().length === 0) {
-      res.status(400).json({ error: 'Username is required' });
-      return;
-    }
-    
-    // Check if username is already taken
-    const existingUser = await db
-      .selectFrom('users')
-      .select('id')
-      .where('username', '=', username.trim())
-      .where('id', '!=', userId)
-      .executeTakeFirst();
-      
-    if (existingUser) {
-      res.status(400).json({ error: 'Username already taken' });
-      return;
-    }
-    
-    // Update user profile
-    await db
-      .updateTable('users')
-      .set({
-        username: username.trim(),
-        email: email?.trim() || null,
-        skills: skills?.trim() || '',
-        updated_at: new Date().toISOString()
-      })
-      .where('id', '=', userId)
-      .execute();
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Failed to update profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
-});
-
-// Fix proposal voting
-app.post('/api/proposals/:id/vote', authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    const proposalId = parseInt(req.params.id);
-    const { vote_type } = req.body;
-    const userId = req.userId!;
-    
-    if (!['for', 'against'].includes(vote_type)) {
-      res.status(400).json({ error: 'Invalid vote type' });
-      return;
-    }
-    
-    // Check if proposal exists and is active
-    const proposal = await db
-      .selectFrom('proposals')
-      .selectAll()
-      .where('id', '=', proposalId)
-      .executeTakeFirst();
-      
-    if (!proposal) {
-      res.status(404).json({ error: 'Proposal not found' });
-      return;
-    }
-    
-    if (proposal.status !== 'active' || new Date(proposal.deadline) < new Date()) {
-      res.status(400).json({ error: 'Voting period has ended' });
-      return;
-    }
-    
-    // Check if user already voted
-    const existingVote = await db
-      .selectFrom('votes')
-      .selectAll()
-      .where('proposal_id', '=', proposalId)
-      .where('user_id', '=', userId)
-      .executeTakeFirst();
-      
-    if (existingVote) {
-      res.status(400).json({ error: 'You have already voted on this proposal' });
-      return;
-    }
-    
-    // Insert vote
-    await db
-      .insertInto('votes')
-      .values({
-        proposal_id: proposalId,
-        user_id: userId,
-        vote_type
-      })
-      .execute();
-    
-    // Update proposal vote counts
-    if (vote_type === 'for') {
-      await db
-        .updateTable('proposals')
-        .set({ votes_for: proposal.votes_for + 1 })
-        .where('id', '=', proposalId)
-        .execute();
-    } else {
-      await db
-        .updateTable('proposals')
-        .set({ votes_against: proposal.votes_against + 1 })
-        .where('id', '=', proposalId)
-        .execute();
-    }
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Failed to vote:', error);
-    res.status(500).json({ error: 'Failed to vote' });
-  }
-});
-```
-
-### 2. Database Migration for Indexes
-
-```sql
--- Add performance indexes
-CREATE INDEX IF NOT EXISTS idx_help_requests_status ON help_requests(status);
-CREATE INDEX IF NOT EXISTS idx_help_requests_category ON help_requests(category);
-CREATE INDEX IF NOT EXISTS idx_help_requests_location ON help_requests(latitude, longitude) WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_crisis_alerts_location ON crisis_alerts(latitude, longitude, radius);
-CREATE INDEX IF NOT EXISTS idx_proposals_deadline ON proposals(deadline, status);
-CREATE INDEX IF NOT EXISTS idx_votes_proposal_user ON votes(proposal_id, user_id);
-CREATE INDEX IF NOT EXISTS idx_messages_help_request ON messages(help_request_id, created_at);
-```
-
-### 3. Security Headers Implementation
-
-```typescript
-// Add to server/index.ts
-import helmet from 'helmet';
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"]
-    }
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  }
-}));
 ```
 
 ---
 
-## 📊 System Health Score
+## 📝 Updated Immediate Action Plan
 
-| Component | Score | Status | Critical Issues |
-|-----------|-------|--------|----------------|
-| **Database Schema** | 95% | ✅ Excellent | Minor: Unused tables |
-| **API Architecture** | 75% | ⚠️ Good | Missing endpoints |
-| **Frontend Implementation** | 85% | ✅ Good | Error handling gaps |
-| **Security** | 70% | ⚠️ Adequate | Input validation needed |
-| **Performance** | 80% | ✅ Good | Index optimization |
-| **Real-time Features** | 90% | ✅ Excellent | Minor connection issues |
-| **Code Quality** | 85% | ✅ Good | Minor inconsistencies |
-| **Documentation** | 60% | ⚠️ Adequate | API docs missing |
+### 🚨 Security Critical (Fix Today)
+- [ ] Implement proper JWT verification and disconnect for sockets
+- [ ] Add file signature/magic bytes validation, filename/path sanitization, virus scanning to file uploads
+- [ ] Add comprehensive input validation and sanitization (backend & frontend)
+- [ ] Fix Express 5 return statements in auth middleware
+- [ ] SQL injection prevention in all queries
 
-**Overall System Health: 81% - Good with Important Issues**
+### 🔴 System & Data Integrity (Fix This Week)
+- [ ] Complete email verification token integration
+- [ ] Add database transactions for multi-step operations
+- [ ] Apply missing rate limiters to all critical endpoints
+- [ ] Fix socket and component memory leaks
+
+### 🟡 High Priority (Fix Within 2 Weeks)
+- [ ] Standardize error and API response formats
+- [ ] Add database connection pooling
+- [ ] Fix state management and async race conditions
+- [ ] Complete KYC and phone verification systems
+
+### 🟢 Medium Priority (Fix Within Month)
+- [ ] Implement client-side input validation
+- [ ] Complete CORS and preflight config
+- [ ] Add accessibility/SEO/UX enhancements
 
 ---
 
-## 🎯 Immediate Action Plan
+## 📊 Updated System Health Score
 
-### Day 1: Critical Fixes
-- [ ] Implement missing `/api/user/stats` endpoint
-- [ ] Implement missing `/api/user/profile` PUT endpoint  
-- [ ] Fix proposal voting logic
-- [ ] Add input validation middleware
+| Component         | Previous Score | New Score | Critical Issues Found                      |
+|-------------------|---------------|-----------|--------------------------------------------|
+| **Security**      | 70%           | 40%       | Socket auth bypass, file upload, SQLi      |
+| **Authentication**| 85%           | 60%       | Token race, JWT bypass, email verification |
+| **API Architecture**| 75%         | 65%       | Rate limiting, inconsistent responses      |
+| **Frontend**      | 85%           | 70%       | Memory leaks, state races, missing validation |
+| **Database**      | 95%           | 80%       | No transactions, pooling, indexing         |
+| **Error Handling**| 70%           | 50%       | Inconsistent, missing boundaries           |
 
-### Day 2-3: Security Hardening
-- [ ] Add rate limiting
-- [ ] Implement security headers
-- [ ] Add comprehensive input sanitization
-- [ ] Fix authentication edge cases
+**Overall System Health: 62% — Needs Immediate Attention**
 
-### Week 1: Core Features
-- [ ] Implement email verification system
-- [ ] Add missing database indexes
-- [ ] Implement user statistics properly
-- [ ] Fix all field name mismatches
+---
 
-### Week 2: Enhanced Features  
-- [ ] Implement phone verification
-- [ ] Add rating system
-- [ ] Implement delegation system UI
-- [ ] Add comprehensive error handling
+## 🎯 Conclusion
 
-The platform has a solid foundation but requires these critical fixes for production readiness. The majority of issues are implementation gaps rather than architectural problems.
+GALAX is a promising platform with a robust foundation, but major vulnerabilities and stability issues must be addressed before any further deployment or public beta. Security, consistency, and transactional integrity are top priorities for the next development cycle.
