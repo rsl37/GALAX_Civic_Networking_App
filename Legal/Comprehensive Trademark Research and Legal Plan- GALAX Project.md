@@ -2,7 +2,7 @@
 
 # Create a trademark search and plan for the project from the following text:
 
-"## Trademark Search for "GALAX"
+## Trademark Search for "GALAX"
 
 ### 1. U.S. Trademark Status
 
