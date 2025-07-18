@@ -127,7 +127,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 
 // IP validation middleware
 export const validateIP = (req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   
   // Log suspicious activity
   if (clientIP === 'unknown') {

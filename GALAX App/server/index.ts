@@ -62,9 +62,12 @@ import {
   apiLimiter, 
   authLimiter, 
   emailLimiter, 
+  phoneLimiter,
   passwordResetLimiter,
   uploadLimiter,
-  crisisLimiter 
+  crisisLimiter,
+  votingLimiter,
+  profileUpdateLimiter
 } from './middleware/rateLimiter.js';
 import { 
   securityHeaders, 
@@ -85,8 +88,15 @@ import {
   validatePasswordReset,
   validatePasswordResetConfirm,
   validateEmailVerification,
+  validatePhoneVerification,
+  validatePhoneVerificationConfirm,
   validateFileUpload
 } from './middleware/validation.js';
+import {
+  accountLockoutMiddleware,
+  recordFailedAttempt,
+  recordSuccessfulAttempt
+} from './middleware/accountLockout.js';
 
 // Import socket manager
 import SocketManager from './socketManager.js';
@@ -155,8 +165,21 @@ app.use(validateIP);
 app.use(requestLogger);
 
 // Body parsing middleware with security
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ 
+  limit: '1mb',  // Reduced from 10mb for better security
+  strict: true,
+  verify: (req: any, res, buf) => {
+    // Additional JSON validation
+    if (buf && buf.length) {
+      req.rawBody = buf;
+    }
+  }
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '1mb',  // Reduced from 10mb for better security
+  parameterLimit: 20  // Limit number of parameters to prevent parameter pollution
+}));
 
 // Input sanitization
 app.use(sanitizeInput);
@@ -304,7 +327,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
   }
 });
 
-app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
+app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin, async (req, res) => {
   try {
     const { email, password, walletAddress } = req.body;
     
@@ -338,6 +361,10 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
 
     if (!user) {
       console.log('❌ Login failed: User not found');
+      // Record failed attempt
+      if (req.lockoutKey) {
+        recordFailedAttempt(req.lockoutKey);
+      }
       return res.status(401).json({ 
         success: false,
         error: {
@@ -351,6 +378,10 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
     if (email && password) {
       if (!user.password_hash) {
         console.log('❌ Login failed: No password hash for email user');
+        // Record failed attempt
+        if (req.lockoutKey) {
+          recordFailedAttempt(req.lockoutKey);
+        }
         return res.status(401).json({ 
           success: false,
           error: {
@@ -363,6 +394,10 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
       const isValid = await comparePassword(password, user.password_hash);
       if (!isValid) {
         console.log('❌ Login failed: Invalid password');
+        // Record failed attempt
+        if (req.lockoutKey) {
+          recordFailedAttempt(req.lockoutKey);
+        }
         return res.status(401).json({ 
           success: false,
           error: {
@@ -374,6 +409,11 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
     }
 
     const token = generateToken(user.id);
+    
+    // Record successful attempt (clears failed attempts)
+    if (req.lockoutKey) {
+      recordSuccessfulAttempt(req.lockoutKey);
+    }
     
     console.log('✅ Login successful:', user.id);
     res.json({ 
@@ -423,7 +463,7 @@ app.post('/api/auth/forgot-password', passwordResetLimiter, validatePasswordRese
   }
 });
 
-app.post('/api/auth/validate-reset-token', async (req, res) => {
+app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res) => {
   try {
     const { token } = req.body;
     
@@ -573,7 +613,7 @@ app.post('/api/auth/verify-email', validateEmailVerification, async (req, res) =
 });
 
 // Added 2025-01-11 17:01:45 UTC - Phone verification endpoints
-app.post('/api/auth/send-phone-verification', emailLimiter, authenticateToken, validatePhoneVerification, async (req: AuthRequest, res) => {
+app.post('/api/auth/send-phone-verification', phoneLimiter, authenticateToken, validatePhoneVerification, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { phone } = req.body;
@@ -626,7 +666,7 @@ app.post('/api/auth/send-phone-verification', emailLimiter, authenticateToken, v
   }
 });
 
-app.post('/api/auth/verify-phone', authenticateToken, validatePhoneVerificationConfirm, async (req: AuthRequest, res) => {
+app.post('/api/auth/verify-phone', phoneLimiter, authenticateToken, validatePhoneVerificationConfirm, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { phone, code } = req.body;
@@ -1110,7 +1150,7 @@ app.get('/api/user/profile', authenticateToken, async (req: AuthRequest, res) =>
   }
 });
 
-app.put('/api/user/profile', authenticateToken, validateProfileUpdate, async (req: AuthRequest, res) => {
+app.put('/api/user/profile', profileUpdateLimiter, authenticateToken, validateProfileUpdate, async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
     const { username, email, phone, skills, bio } = req.body;
@@ -1664,7 +1704,7 @@ app.get('/api/proposals', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Proposal voting endpoint with enhanced validation - FIXED
-app.post('/api/proposals/:id/vote', authenticateToken, validateVote, async (req: AuthRequest, res) => {
+app.post('/api/proposals/:id/vote', votingLimiter, authenticateToken, validateVote, async (req: AuthRequest, res) => {
   try {
     const proposalId = parseInt(req.params.id);
     const { vote_type } = req.body;

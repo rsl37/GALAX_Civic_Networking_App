@@ -185,6 +185,58 @@ export const crisisLimiter = rateLimit({
   }
 });
 
+// Voting rate limiting (stricter to prevent vote manipulation)
+export const votingLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10, // limit each IP to 10 votes per 5 minutes
+  message: {
+    success: false,
+    error: {
+      message: 'Too many voting attempts, please try again later.',
+      statusCode: 429
+    },
+    timestamp: new Date().toISOString()
+  },
+  handler: (req, res) => {
+    console.log(`🚨 Voting rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many voting attempts, please try again later.',
+        statusCode: 429
+      },
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
+  }
+});
+
+// Profile update rate limiting
+export const profileUpdateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 5, // limit each IP to 5 profile updates per 10 minutes
+  message: {
+    success: false,
+    error: {
+      message: 'Too many profile update attempts, please try again later.',
+      statusCode: 429
+    },
+    timestamp: new Date().toISOString()
+  },
+  handler: (req, res) => {
+    console.log(`🚨 Profile update rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      error: {
+        message: 'Too many profile update attempts, please try again later.',
+        statusCode: 429
+      },
+      timestamp: new Date().toISOString(),
+      path: req.path
+    });
+  }
+});
+
 // Create rate limiter with custom config
 export const createRateLimiter = (windowMs: number, max: number, message: string) => {
   return rateLimit({
