@@ -14,7 +14,7 @@
 - [ ] All tables and indexes created
 - [ ] Database permissions configured
 - [ ] Backup strategy implemented
-- [ ] <!-- Added 2025-07-18: For production scaling, consider migration to PostgreSQL/MySQL. Add migration documentation if planning to scale beyond SQLite. -->
+- [ ] <!-- Added 2025-07-18 21:40:07: For production scaling, consider migration to PostgreSQL/MySQL. Add migration documentation if planning to scale beyond SQLite. -->
 
 ### Security Configuration
 - [ ] JWT_SECRET generated (32+ characters)
@@ -43,7 +43,7 @@ SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 SMTP_FROM=GALAX Support <noreply@yourdomain.com>
-# <!-- Added 2025-07-18: For production, recommend using a transactional email provider (SendGrid, Mailgun, SES) instead of Gmail SMTP for reliability and compliance. -->
+# <!-- Added 2025-07-18 21:40:07: For production, recommend using a transactional email provider (SendGrid, Mailgun, SES) instead of Gmail SMTP for reliability and compliance. -->
 
 # Frontend URL (for password reset emails)
 FRONTEND_URL=https://yourdomain.com
@@ -78,7 +78,7 @@ npm ci --omit=dev
 # Build the application
 npm run build
 ```
-<!-- Added 2025-07-18: If using Docker or another orchestrator, document container build and deployment steps here. -->
+<!-- Added 2025-07-18 21:40:07: If using Docker or another orchestrator, document container build and deployment steps here. -->
 
 ### 3. Database Initialization
 ```bash
@@ -117,7 +117,7 @@ pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 ```
-<!-- Added 2025-07-18: Check that "script" path matches your actual build output. -->
+<!-- Added 2025-07-18 21:40:07: Check that "script" path matches your actual build output. -->
 
 ### 5. Reverse Proxy (Nginx Example)
 ```nginx
@@ -134,7 +134,7 @@ server {
     ssl_certificate /path/to/ssl/cert.pem;
     ssl_certificate_key /path/to/ssl/key.pem;
 
-    # <!-- Added 2025-07-18: Recommend automating SSL certificate renewal with Let’s Encrypt (see SSL renewal section below). -->
+    # <!-- Added 2025-07-18 21:40:07: Recommend automating SSL certificate renewal with Let’s Encrypt (see SSL renewal section below). -->
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -188,7 +188,7 @@ server {
     client_max_body_size 10M;
 }
 ```
-<!-- Added 2025-07-18: For scaling, consider using S3/CDN for file uploads. Add integration steps as needed. -->
+<!-- Added 2025-07-18 21:40:07: For scaling, consider using S3/CDN for file uploads. Add integration steps as needed. -->
 
 ## 🔍 Health Checks
 
@@ -242,7 +242,7 @@ pm2 monit
 # Check database size
 ls -lh /opt/galax/data/database.sqlite
 ```
-<!-- Added 2025-07-18: Consider integrating external monitoring tools (Prometheus, Grafana, Datadog) for advanced metrics and alerting. -->
+<!-- Added 2025-07-18 21:40:07: Consider integrating external monitoring tools (Prometheus, Grafana, Datadog) for advanced metrics and alerting. -->
 
 ## 🔒 Security Considerations
 
@@ -272,10 +272,10 @@ certbot renew --dry-run
 0 2 * * * /usr/bin/certbot renew --quiet
 ```
 
-### <!-- Added 2025-07-18: Add WAF (Web Application Firewall) and DDoS protection for public-facing platforms. -->
+### <!-- Added 2025-07-18 21:40:07: Add WAF (Web Application Firewall) and DDoS protection for public-facing platforms. -->
 - Consider solutions like Cloudflare or AWS WAF for edge security.
 
-### <!-- Added 2025-07-18: Add security vulnerability scanning (npm audit, dependabot, etc), especially for web3 environments. -->
+### <!-- Added 2025-07-18 21:40:07: Add security vulnerability scanning (npm audit, dependabot, etc), especially for web3 environments. -->
 - Run `npm audit` regularly and review dependabot alerts.
 - For web3, monitor smart contract vulnerabilities and node updates.
 
@@ -290,7 +290,7 @@ certbot renew --dry-run
 - [ ] Database backup
 - [ ] Log rotation
 - [ ] Security updates
-- [ ] <!-- Added 2025-07-18: Run vulnerability scans (npm audit, dependabot etc) -->
+- [ ] <!-- Added 2025-07-18 21:40:07: Run vulnerability scans (npm audit, dependabot etc) -->
 
 ### Monthly Tasks
 - [ ] Full system backup
@@ -304,7 +304,7 @@ certbot renew --dry-run
 - Session store (Redis)
 - Database clustering
 - File storage (S3/CDN)
-- <!-- Added 2025-07-18: For Web3, document scaling for blockchain nodes or external services if applicable. -->
+- <!-- Added 2025-07-18 21:40:07: For Web3, document scaling for blockchain nodes or external services if applicable. -->
 
 ### Vertical Scaling
 - Increase server resources
@@ -312,7 +312,7 @@ certbot renew --dry-run
 - Implement caching
 - Connection pooling
 
-## 🔍 <!-- Added 2025-07-18: Rollback Steps -->
+## 🔍 <!-- Added 2025-07-18 21:40:07: Rollback Steps -->
 ### Deployment Rollback Steps
 ```bash
 # If deployment fails, restore previous build
@@ -369,9 +369,9 @@ df -h
 
 ## 📞 Support Contacts
 
-- **Technical Lead**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
-- **DevOps**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
-- **Emergency**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
+- **Technical Lead**: [Your Contact] <!-- Added 2025-07-18 21:40:07: Replace placeholder with real contact before production. -->
+- **DevOps**: [Your Contact] <!-- Added 2025-07-18 21:40:07: Replace placeholder with real contact before production. -->
+- **Emergency**: [Your Contact] <!-- Added 2025-07-18 21:40:07: Replace placeholder with real contact before production. -->
 
 ## 🎯 Success Metrics
 
@@ -388,4 +388,4 @@ Monitor these KPIs during beta:
 
 **Note**: This guide assumes a Linux-based production environment. Adjust commands and paths as needed for your specific setup.
 
-<!-- Added 2025-07-18: If frontend is deployed separately (e.g., Vercel, Netlify), add deployment steps for UI assets. -->
+<!-- Added 2025-07-18 21:40:07: If frontend is deployed separately (e.g., Vercel, Netlify), add deployment steps for UI assets. -->
