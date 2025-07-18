@@ -32,6 +32,18 @@ import {
   getUserPhone
 } from './phone.js';
 
+// Added 2025-01-11 17:01:45 UTC - Import 2FA functions
+import {
+  generate2FASecret,
+  enable2FA,
+  disable2FA,
+  verify2FACode,
+  generateBackupCodes,
+  validateBackupCode,
+  is2FAEnabled,
+  get2FAStatus
+} from './twofa.js';
+
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
 import { 
@@ -634,6 +646,215 @@ app.post('/api/auth/verify-phone', authenticateToken, validatePhoneVerificationC
     });
   } catch (error) {
     console.error('❌ Phone verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+// Added 2025-01-11 17:01:45 UTC - Two-Factor Authentication endpoints
+app.post('/api/auth/2fa/setup', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    
+    console.log('🔐 2FA setup request from user:', userId);
+    
+    // Get user info
+    const user = await db
+      .selectFrom('users')
+      .select(['username'])
+      .where('id', '=', userId)
+      .executeTakeFirst();
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: {
+          message: 'User not found',
+          statusCode: 404
+        }
+      });
+    }
+
+    const result = await generate2FASecret(userId, user.username);
+    
+    if (!result) {
+      return res.status(500).json({ 
+        success: false,
+        error: {
+          message: 'Failed to generate 2FA secret',
+          statusCode: 500
+        }
+      });
+    }
+
+    console.log('✅ 2FA setup data generated successfully');
+    res.json({ 
+      success: true,
+      data: {
+        secret: result.secret,
+        qrCode: result.qrCode,
+        message: 'Scan the QR code with your authenticator app'
+      }
+    });
+  } catch (error) {
+    console.error('❌ 2FA setup error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.post('/api/auth/2fa/enable', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { code } = req.body;
+    
+    console.log('🔒 2FA enable request from user:', userId);
+
+    if (!code || code.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Please provide a 6-digit verification code',
+          statusCode: 400
+        }
+      });
+    }
+
+    const success = await enable2FA(userId, code);
+    
+    if (!success) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Invalid verification code. Please try again.',
+          statusCode: 400
+        }
+      });
+    }
+
+    console.log('✅ 2FA enabled successfully for user:', userId);
+    res.json({ 
+      success: true,
+      data: { message: 'Two-factor authentication enabled successfully' }
+    });
+  } catch (error) {
+    console.error('❌ 2FA enable error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.post('/api/auth/2fa/disable', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { code } = req.body;
+    
+    console.log('🔓 2FA disable request from user:', userId);
+
+    if (!code || code.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Please provide a 6-digit verification code',
+          statusCode: 400
+        }
+      });
+    }
+
+    const success = await disable2FA(userId, code);
+    
+    if (!success) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Invalid verification code. Please try again.',
+          statusCode: 400
+        }
+      });
+    }
+
+    console.log('✅ 2FA disabled successfully for user:', userId);
+    res.json({ 
+      success: true,
+      data: { message: 'Two-factor authentication disabled successfully' }
+    });
+  } catch (error) {
+    console.error('❌ 2FA disable error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.post('/api/auth/2fa/verify', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { code } = req.body;
+    
+    console.log('🔍 2FA verification request from user:', userId);
+
+    if (!code || code.length !== 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Please provide a 6-digit verification code',
+          statusCode: 400
+        }
+      });
+    }
+
+    const isValid = await verify2FACode(userId, code);
+    
+    res.json({ 
+      success: true,
+      data: { 
+        valid: isValid,
+        message: isValid ? 'Code verified successfully' : 'Invalid verification code'
+      }
+    });
+  } catch (error) {
+    console.error('❌ 2FA verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.get('/api/auth/2fa/status', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    
+    const status = await get2FAStatus(userId);
+    
+    res.json({ 
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    console.error('❌ 2FA status error:', error);
     res.status(500).json({ 
       success: false,
       error: {
