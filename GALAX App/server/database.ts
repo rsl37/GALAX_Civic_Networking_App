@@ -446,6 +446,12 @@ try {
   // Set journal mode to WAL for better performance
   sqliteDb.pragma('journal_mode = WAL');
   
+  // Performance optimizations - Added 2025-01-11 for urgent performance fixes
+  sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
+  sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
+  sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
+  sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
+  
   // Test the connection
   const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
   console.log('🧪 Database test query result:', result);

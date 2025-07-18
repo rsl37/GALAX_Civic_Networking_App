@@ -1929,6 +1929,15 @@ export async function startServer(port: number) {
   try {
     console.log('🚀 Starting server on port:', port);
     
+    // Initialize performance optimizations - Added 2025-01-11 for urgent performance fixes
+    try {
+      const { createPerformanceIndexes } = await import('./performance.js');
+      await createPerformanceIndexes();
+      console.log('🚀 Performance optimizations initialized');
+    } catch (error) {
+      console.warn('⚠️ Performance optimization warning:', error.message);
+    }
+    
     if (process.env.NODE_ENV === 'production') {
       console.log('🌐 Setting up static file serving...');
       setupStaticServing(app);
@@ -1939,7 +1948,8 @@ export async function startServer(port: number) {
       console.log(`🌍 Health check: http://localhost:${port}/api/health`);
       console.log(`🗄️ Database test: http://localhost:${port}/api/test-db`);
       console.log(`🔌 Socket health: http://localhost:${port}/api/socket/health`);
-      console.log(`🔒 Security: Rate limiting, input validation, and security headers enabled`);
+      console.log(`🔒 Security: Rate limiting, account lockout, input validation, and security headers enabled`);
+      console.log(`🚀 Performance: Database indexes and connection optimizations active`);
       console.log(`🧹 Socket management: Enhanced with connection cleanup and memory management`);
     });
   } catch (err) {
