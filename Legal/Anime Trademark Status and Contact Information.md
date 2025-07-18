@@ -2,35 +2,6 @@
 
 # It is also an anime trademark right? How do I contact the studio that made the anime and the author of the story? I would like to credit them as thanks and possibly get some of the author’s input.
 
-<function_calls>
-<invoke name="search_web">
-<parameter name="queries">["Gatchaman Crowds GALAX trademark anime", "Tatsunoko Production contact information licensing", "Gatchaman Crowds creator author Kenji Nakamura"]</parameter>
-</invoke>
-</function_calls>
-
-<function_calls>
-<invoke name="search_web">
-<parameter name="queries">["Tatsunoko Production licensing department email address", "how to contact Japanese anime studio permission licensing", "Gatchaman Crowds original story creator writer"]</parameter>
-</invoke>
-</function_calls>
-
-<function_calls>
-<invoke name="search_web">
-<parameter name="queries">["Tatsunoko Production official website contact", "Japanese anime studio licensing process", "Gatchaman Crowds intellectual property rights"]</parameter>
-</invoke>
-</function_calls>
-
-<function_calls>
-<invoke name="search_web">
-<parameter name="queries">["Tatsunoko Production Tokyo office address phone", "anime licensing requests Japan process", "Kenji Nakamura director contact information"]</parameter>
-</invoke>
-</function_calls>
-
-<function_calls>
-<invoke name="search_web">
-<parameter name="queries">["Gatchaman Crowds trademark registration Japan", "Tatsunoko Production business inquiries", "anime intellectual property licensing Japan"]</parameter>
-</invoke>
-</function_calls>
 
 # Anime Trademark Status and Contact Information
 
