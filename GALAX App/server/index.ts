@@ -44,6 +44,18 @@ import {
   get2FAStatus
 } from './twofa.js';
 
+// Added 2025-01-11 17:01:45 UTC - Import KYC functions
+import {
+  uploadKYCDocuments,
+  getKYCStatus,
+  updateKYCStatus,
+  getEncryptedDocument,
+  getPendingKYCVerifications,
+  isValidDocumentType,
+  getDocumentTypeDisplayName,
+  kycUpload
+} from './kyc.js';
+
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
 import { 
@@ -855,6 +867,202 @@ app.get('/api/auth/2fa/status', authenticateToken, async (req: AuthRequest, res)
     });
   } catch (error) {
     console.error('❌ 2FA status error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+// Added 2025-01-11 17:01:45 UTC - KYC Document Verification endpoints
+app.post('/api/kyc/upload', authenticateToken, kycUpload.fields([
+  { name: 'document', maxCount: 1 },
+  { name: 'selfie', maxCount: 1 }
+]), async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { documentType, documentNumber } = req.body;
+    
+    console.log('📄 KYC document upload request from user:', userId);
+    
+    if (!documentType || !documentNumber) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Document type and number are required',
+          statusCode: 400
+        }
+      });
+    }
+    
+    if (!isValidDocumentType(documentType)) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Invalid document type',
+          statusCode: 400
+        }
+      });
+    }
+    
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    
+    if (!files.document || files.document.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Document file is required',
+          statusCode: 400
+        }
+      });
+    }
+    
+    const documentFile = files.document[0];
+    const selfieFile = files.selfie ? files.selfie[0] : undefined;
+    
+    const result = await uploadKYCDocuments(
+      userId,
+      documentType,
+      documentNumber,
+      documentFile,
+      selfieFile
+    );
+    
+    if (!result.success) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: result.error || 'Document upload failed',
+          statusCode: 400
+        }
+      });
+    }
+    
+    console.log('✅ KYC documents uploaded successfully');
+    res.json({ 
+      success: true,
+      data: { 
+        message: 'Documents uploaded successfully and are under review',
+        verificationId: result.verificationId
+      }
+    });
+  } catch (error) {
+    console.error('❌ KYC upload error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.get('/api/kyc/status', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    
+    const status = await getKYCStatus(userId);
+    
+    res.json({ 
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    console.error('❌ KYC status error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.get('/api/kyc/document-types', (req, res) => {
+  try {
+    const documentTypes = [
+      { value: 'passport', label: getDocumentTypeDisplayName('passport') },
+      { value: 'drivers_license', label: getDocumentTypeDisplayName('drivers_license') },
+      { value: 'national_id', label: getDocumentTypeDisplayName('national_id') },
+      { value: 'residence_permit', label: getDocumentTypeDisplayName('residence_permit') }
+    ];
+    
+    res.json({ 
+      success: true,
+      data: documentTypes
+    });
+  } catch (error) {
+    console.error('❌ Document types error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+// Admin endpoints for KYC management (would need admin authentication middleware)
+app.get('/api/admin/kyc/pending', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    // Note: In production, this should check for admin role
+    const verifications = await getPendingKYCVerifications();
+    
+    res.json({ 
+      success: true,
+      data: verifications
+    });
+  } catch (error) {
+    console.error('❌ Pending KYC error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.post('/api/admin/kyc/:verificationId/status', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { verificationId } = req.params;
+    const { status, notes } = req.body;
+    
+    if (!['approved', 'rejected', 'under_review'].includes(status)) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Invalid status',
+          statusCode: 400
+        }
+      });
+    }
+    
+    const success = await updateKYCStatus(parseInt(verificationId), status, notes);
+    
+    if (!success) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Failed to update status',
+          statusCode: 400
+        }
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      data: { message: 'Status updated successfully' }
+    });
+  } catch (error) {
+    console.error('❌ Update KYC status error:', error);
     res.status(500).json({ 
       success: false,
       error: {
