@@ -2,14 +2,21 @@
 
 **GALAX: Web-3 Civic Networking Platform** is an innovative project created and led by [@rsl37](https://github.com/rsl37).
 
-This project leverages advanced tools and AI platforms to accelerate development and deliver a cutting-edge user experience:
+## Core Tools & Workflow <!-- Added 2025-07-18: Section clarifying tool roles -->
+- **instance.so**: Used for initial prototyping and will be used for production deployment. <!-- Added 2025-07-18: Updated description to clarify present/future use -->
+- **Perplexity AI**: Used for research, brainstorming, and intelligent content suggestions. <!-- Added 2025-07-18: Clarified role -->
+- **GitHub & Copilot**: Used for all code collaboration, project management, and AI-powered code generation. <!-- Added 2025-07-18: Clarified Copilot as main coding tool -->
 
-- **instance.so**: For rapid prototyping, deployment, and workflow automation.
-- **Perplexity AI**: For research, brainstorming, and intelligent code/content suggestions.
-- **GitHub & Copilot**: For code collaboration, project management, and AI-powered code generation.
+## Tech Stack <!-- Added 2025-07-18: New section describing languages used -->
+- **TypeScript, CSS, JavaScript, HTML** – powering the core platform. <!-- Added 2025-07-18: Language stack detail -->
 
-**Project Vision:**  
+## Project Vision
 Build a feature-rich, anime-inspired, blockchain-enabled platform for civic engagement and crisis response, powered by real-time tech and next-generation AI assistance.
+<!-- Added 2025-07-18: Update this paragraph if the anime theme, blockchain protocols, or feature focus has evolved. -->
+
+## Current Status <!-- Added 2025-07-18: New section for live updates and features -->
+- Actively developed and maintained.
+- Recent focus: [add brief note about latest major updates or live features here] <!-- Added 2025-07-18: Fill in current updates/milestones -->
 
 ---
 
