@@ -71,8 +71,10 @@ export const securityHeaders = helmet({
   // Disable download options for IE
   ieNoOpen: true,
   
-  // Cross-domain policies
-  crossdomain: false
+  // Cross-origin policies  
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
 });
 
 // Request sanitization middleware

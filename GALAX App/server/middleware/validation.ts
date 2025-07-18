@@ -111,7 +111,7 @@ export const validateProfileUpdate = [
     
   body('phone')
     .optional()
-    .isMobilePhone()
+    .isMobilePhone('any')
     .withMessage('Please provide a valid phone number'),
     
   body('skills')
@@ -284,7 +284,7 @@ export const validateEmailVerification = [
 // Phone verification validation
 export const validatePhoneVerification = [
   body('phone')
-    .isMobilePhone()
+    .isMobilePhone('any')
     .withMessage('Please provide a valid phone number'),
     
   handleValidationErrors
@@ -292,7 +292,7 @@ export const validatePhoneVerification = [
 
 export const validatePhoneVerificationConfirm = [
   body('phone')
-    .isMobilePhone()
+    .isMobilePhone('any')
     .withMessage('Please provide a valid phone number'),
     
   body('code')
