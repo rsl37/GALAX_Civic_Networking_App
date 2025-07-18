@@ -21,6 +21,17 @@ import {
   resendEmailVerification
 } from './email.js';
 
+// Added 2025-01-11 17:01:45 UTC - Import phone verification functions
+import {
+  generatePhoneVerificationToken,
+  validatePhoneVerificationCode,
+  markPhoneVerificationTokenAsUsed,
+  markPhoneAsVerified,
+  sendPhoneVerification,
+  resendPhoneVerification,
+  getUserPhone
+} from './phone.js';
+
 // Import middleware
 import errorHandler from './middleware/errorHandler.js';
 import { 
@@ -534,6 +545,102 @@ app.post('/api/auth/verify-email', validateEmailVerification, async (req, res) =
   } catch (error) {
     console.error('❌ Email verification error:', error);
     throw error;
+  }
+});
+
+// Added 2025-01-11 17:01:45 UTC - Phone verification endpoints
+app.post('/api/auth/send-phone-verification', emailLimiter, authenticateToken, validatePhoneVerification, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { phone } = req.body;
+    
+    console.log('📱 Phone verification request from user:', userId);
+    
+    // Generate verification code
+    const code = await generatePhoneVerificationToken(userId, phone);
+    
+    if (!code) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Failed to generate verification code',
+          statusCode: 400
+        }
+      });
+    }
+
+    // Send SMS
+    const success = await sendPhoneVerification(phone, code);
+    
+    if (!success) {
+      return res.status(500).json({ 
+        success: false,
+        error: {
+          message: 'Failed to send verification SMS',
+          statusCode: 500
+        }
+      });
+    }
+
+    console.log('✅ Phone verification code sent successfully');
+    res.json({ 
+      success: true,
+      data: { 
+        message: 'Verification code sent to your phone',
+        expiresIn: '10 minutes'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Phone verification send error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+app.post('/api/auth/verify-phone', authenticateToken, validatePhoneVerificationConfirm, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { phone, code } = req.body;
+    
+    console.log('🔍 Phone verification attempt for user:', userId);
+
+    const isValid = await validatePhoneVerificationCode(userId, phone, code);
+    
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        error: {
+          message: 'Invalid or expired verification code',
+          statusCode: 400
+        }
+      });
+    }
+
+    // Mark phone as verified
+    await markPhoneAsVerified(userId, phone);
+    
+    // Mark token as used
+    await markPhoneVerificationTokenAsUsed(userId);
+
+    console.log('✅ Phone verified successfully for user:', userId);
+    res.json({ 
+      success: true,
+      data: { message: 'Phone verified successfully' }
+    });
+  } catch (error) {
+    console.error('❌ Phone verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
   }
 });
 
