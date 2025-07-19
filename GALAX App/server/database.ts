@@ -163,6 +163,45 @@ export interface DatabaseSchema {
     created_at: string;
     updated_at: string;
   };
+  // Added 2025-01-11 17:01:45 UTC - Email verification tokens table
+  email_verification_tokens: {
+    id: number;
+    user_id: number;
+    token: string;
+    expires_at: string;
+    used_at: string | null;
+    created_at: string;
+  };
+  // Added 2025-01-11 17:01:45 UTC - Phone verification tokens table
+  phone_verification_tokens: {
+    id: number;
+    user_id: number;
+    phone: string;
+    code: string;
+    expires_at: string;
+    used_at: string | null;
+    attempts: number;
+    created_at: string;
+  };
+  // Added 2025-01-11 17:01:45 UTC - KYC verifications table
+  kyc_verifications: {
+    id: number;
+    user_id: number;
+    verification_level: string;
+    document_type: string;
+    document_number: string;
+    document_image_url: string;
+    document_hash: string;
+    selfie_image_url: string | null;
+    selfie_hash: string | null;
+    verification_status: string;
+    verified_at: string | null;
+    expires_at: string | null;
+    compliance_notes: string | null;
+    risk_assessment: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 const dataDirectory = process.env.DATA_DIRECTORY || './data';
@@ -297,6 +336,78 @@ async function initializeDatabase() {
         tempDb.exec(`CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id)`);
         tempDb.exec(`CREATE INDEX idx_oauth_accounts_provider ON oauth_accounts(provider, provider_id)`);
       }
+
+      // Added 2025-01-11 17:01:45 UTC - Create email_verification_tokens table if it doesn't exist
+      if (!tableNames.includes('email_verification_tokens')) {
+        console.log('📝 Creating email_verification_tokens table');
+        tempDb.exec(`
+          CREATE TABLE email_verification_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT NOT NULL UNIQUE,
+            expires_at DATETIME NOT NULL,
+            used_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          )
+        `);
+        
+        // Add indexes
+        tempDb.exec(`CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id)`);
+        tempDb.exec(`CREATE INDEX idx_email_verification_tokens_token ON email_verification_tokens(token)`);
+      }
+
+      // Added 2025-01-11 17:01:45 UTC - Create phone_verification_tokens table if it doesn't exist
+      if (!tableNames.includes('phone_verification_tokens')) {
+        console.log('📝 Creating phone_verification_tokens table');
+        tempDb.exec(`
+          CREATE TABLE phone_verification_tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            phone TEXT NOT NULL,
+            code TEXT NOT NULL,
+            expires_at DATETIME NOT NULL,
+            used_at DATETIME,
+            attempts INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          )
+        `);
+        
+        // Add indexes
+        tempDb.exec(`CREATE INDEX idx_phone_verification_tokens_user_id ON phone_verification_tokens(user_id)`);
+        tempDb.exec(`CREATE INDEX idx_phone_verification_tokens_phone ON phone_verification_tokens(phone)`);
+      }
+
+      // Added 2025-01-11 17:01:45 UTC - Create kyc_verifications table if it doesn't exist
+      if (!tableNames.includes('kyc_verifications')) {
+        console.log('📝 Creating kyc_verifications table');
+        tempDb.exec(`
+          CREATE TABLE kyc_verifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            verification_level TEXT NOT NULL DEFAULT 'basic',
+            document_type TEXT NOT NULL,
+            document_number TEXT NOT NULL,
+            document_image_url TEXT NOT NULL,
+            document_hash TEXT NOT NULL,
+            selfie_image_url TEXT,
+            selfie_hash TEXT,
+            verification_status TEXT DEFAULT 'pending',
+            verified_at DATETIME,
+            expires_at DATETIME,
+            compliance_notes TEXT,
+            risk_assessment TEXT DEFAULT 'low',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          )
+        `);
+        
+        // Add indexes
+        tempDb.exec(`CREATE INDEX idx_kyc_verifications_user_id ON kyc_verifications(user_id)`);
+        tempDb.exec(`CREATE INDEX idx_kyc_verifications_status ON kyc_verifications(verification_status)`);
+      }
       
       tempDb.close();
     }
@@ -335,6 +446,12 @@ try {
   // Set journal mode to WAL for better performance
   sqliteDb.pragma('journal_mode = WAL');
   
+  // Performance optimizations - Added 2025-01-11 for urgent performance fixes
+  sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
+  sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
+  sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
+  sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
+  
   // Test the connection
   const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
   console.log('🧪 Database test query result:', result);
@@ -346,7 +463,7 @@ try {
   `).all();
   
   console.log('📋 Database tables found:', tables.length);
-  tables.forEach(table => {
+  tables.forEach((table: any) => {
     console.log('  ✅', table.name);
   });
   

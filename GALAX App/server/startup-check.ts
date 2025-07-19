@@ -1,6 +1,7 @@
 import { runDatabaseDiagnostics } from './debug.js';
 import { diagnoseDatabaseFile } from './database-diagnostics.js';
 import { db } from './database.js';
+import { sql } from 'kysely';
 
 export async function performStartupCheck() {
   console.log('🚀 Performing startup check...');
@@ -44,12 +45,10 @@ export async function performStartupCheck() {
     let allTablesExist = true;
     for (const tableName of requiredTables) {
       try {
-        const result = await db
-          .selectFrom(tableName as any)
-          .select(db.fn.count('id').as('count'))
-          .executeTakeFirst();
+        const result = await sql`SELECT COUNT(*) as count FROM ${sql.id(tableName)}`.execute(db);
+        const count = result.rows[0]?.count || 0;
         
-        console.log(`  ✅ ${tableName}: ${result?.count || 0} records`);
+        console.log(`  ✅ ${tableName}: ${count} records`);
       } catch (error) {
         console.log(`  ❌ ${tableName}: Error - ${error.message}`);
         allTablesExist = false;

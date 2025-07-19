@@ -1,18 +1,19 @@
 import { db } from './database.js';
+import { sql } from 'kysely';
 
 export async function debugDatabaseTables() {
   console.log('🔍 Debugging database tables...');
   
   try {
-    // Check if tables exist
-    const tableCheck = await db
-      .selectFrom('sqlite_master')
-      .select(['name', 'type'])
-      .where('type', '=', 'table')
-      .execute();
+    // Check if tables exist using raw SQL for sqlite_master system table
+    const tableCheck = await sql`
+      SELECT name, type 
+      FROM sqlite_master 
+      WHERE type = 'table'
+    `.execute(db);
     
     console.log('📊 Available tables:');
-    tableCheck.forEach(table => {
+    tableCheck.rows.forEach((table: any) => {
       console.log(`  - ${table.name} (${table.type})`);
     });
     

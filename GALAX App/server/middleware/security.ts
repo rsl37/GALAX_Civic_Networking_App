@@ -71,8 +71,10 @@ export const securityHeaders = helmet({
   // Disable download options for IE
   ieNoOpen: true,
   
-  // Cross-domain policies
-  crossdomain: false
+  // Cross-origin policies  
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
 });
 
 // Request sanitization middleware
@@ -125,7 +127,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 
 // IP validation middleware
 export const validateIP = (req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   
   // Log suspicious activity
   if (clientIP === 'unknown') {
