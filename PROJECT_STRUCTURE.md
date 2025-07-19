@@ -6,7 +6,7 @@ Below is a comprehensive overview of the GALAX App folder structure, reflecting 
 ## Main Application Structure
 
 ```
-GALAX App/
+GALAX_App_files/
 ├── components.json                 # Shadcn/ui component configuration
 ├── IMPLEMENTATION_STATUS.md        # Current implementation progress and priorities
 ├── package.json                    # NPM dependencies and scripts (71 packages)
