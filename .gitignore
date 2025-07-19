@@ -44,3 +44,35 @@ tmp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Modern Development Tools
+.vite/
+vite.config.js.timestamp-*
+*.tsbuildinfo
+.tscache/
+
+# Editor support
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Framework specific
+.tailwindcss-cache
+.react-devtools*
+
+# Database files (enhanced)
+*.sqlite-shm
+*.sqlite-wal
+*.backup
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Additional runtime
+stats.html
+storybook-static/
