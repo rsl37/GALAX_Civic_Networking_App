@@ -185,7 +185,7 @@ GALAX_App/
 - **Blockchain integration** - Decentralized governance features
 
 ### 🐛 Known Issues (2025-07-19)
-- TypeScript compilation errors in server code (47 errors)
+- TypeScript compilation errors in server code (47 errors, preventing production build)
 - Missing API endpoints for phone verification and KYC
 - Incomplete CORS configuration
 - Input validation gaps in some endpoints
