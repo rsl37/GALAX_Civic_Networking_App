@@ -188,7 +188,7 @@ cd /opt/galax/app
 
 # Clone or copy application code
 git clone https://github.com/rsl37/GALAX_App.git .
-cd "GALAX App"
+cd "GALAX_App_files"
 
 # Install production dependencies
 npm ci --omit=dev
@@ -301,7 +301,7 @@ module.exports = {
   apps: [{
     name: 'galax-api',
     script: 'dist/server/index.js',
-    cwd: '/opt/galax/app/GALAX App',
+    cwd: '/opt/galax/app/GALAX_App_files',
     instances: 'max',
     exec_mode: 'cluster',
     env: {
