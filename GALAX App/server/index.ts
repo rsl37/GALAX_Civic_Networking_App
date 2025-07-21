@@ -101,6 +101,10 @@ import {
 // Import socket manager
 import SocketManager from './socketManager.js';
 
+// Import stablecoin functionality
+import stablecoinRoutes from './stablecoin/routes.js';
+import { stablecoinService } from './stablecoin/StablecoinService.js';
+
 // Added 2025-01-13 21:58:00 UTC - Import comprehensive security systems
 import { 
   comprehensiveSecurityMiddleware,
@@ -252,6 +256,9 @@ app.get('/api/test-db', async (req, res) => {
     });
   }
 });
+
+// Stablecoin API routes
+app.use('/api/stablecoin', stablecoinRoutes);
 
 // Auth endpoints with enhanced security
 app.post('/api/auth/register', authLimiter, validateRegistration, async (req, res) => {
@@ -1998,6 +2005,16 @@ export async function startServer(port: number) {
       console.error('❌ Security system initialization error:', error);
       // Continue startup even if security initialization fails
     }
+
+    // Initialize and start stablecoin service
+    try {
+      console.log('💰 Initializing stablecoin service...');
+      await stablecoinService.start();
+      console.log('✅ Stablecoin service started successfully');
+    } catch (error) {
+      console.error('❌ Stablecoin service initialization error:', error);
+      // Continue startup even if stablecoin initialization fails
+    }
     
     if (process.env.NODE_ENV === 'production') {
       console.log('🌐 Setting up static file serving...');
@@ -2009,6 +2026,7 @@ export async function startServer(port: number) {
       console.log(`🌍 Health check: http://localhost:${port}/api/health`);
       console.log(`🗄️ Database test: http://localhost:${port}/api/test-db`);
       console.log(`🔌 Socket health: http://localhost:${port}/api/socket/health`);
+      console.log(`💰 Stablecoin API: http://localhost:${port}/api/stablecoin/status`);
       console.log(`🛡️ Security Admin: http://localhost:${port}/api/admin/security/status`);
       console.log(`🔒 Security: COMPREHENSIVE PROTECTION ACTIVE`);
       console.log(`   🦠 Antimalware Protection: ENABLED`);
