@@ -116,8 +116,20 @@ GALAX_App_files/
 - **Trust and rating networks**
 - **Event and group organization**
 - **Democratic governance mechanisms**
+- **Algorithmic Stablecoin (Crowds Token)** ✨ **NEW**
 - **Web3/crypto identity integration (planned)**
 - **Accessibility and internationalization (in progress)**
+
+### 💰 Algorithmic Stablecoin Features
+
+The GALAX platform now includes a sophisticated algorithmic stablecoin system for Crowds Tokens:
+
+- **Price Stability**: Automatic supply adjustments maintain $1.00 peg
+- **Transparent Monetary Policy**: All decisions follow predetermined algorithmic rules
+- **Reserve Backing**: Minimum reserve ratios ensure system stability
+- **Real-time Monitoring**: Live price feeds and stability metrics
+- **User Dashboard**: Complete visibility into token operations
+- **Regulatory Compliance**: Designed for transparency and auditability
 
 See [`IMPLEMENTATION_STATUS.md`](GALAX_App_files/IMPLEMENTATION_STATUS.md) for priorities and remaining tasks.
 

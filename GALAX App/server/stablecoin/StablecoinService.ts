@@ -145,7 +145,7 @@ export class StablecoinService {
       // Get total crowds_balance from all users
       const result = await db
         .selectFrom('users')
-        .select(['sum(crowds_balance) as total_supply'])
+        .select([sql`sum(crowds_balance)`.as('total_supply')])
         .execute();
       
       const totalSupply = result[0]?.total_supply || 0;
