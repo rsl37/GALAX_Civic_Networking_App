@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, HandHeart, AlertTriangle, Vote, User } from 'lucide-react';
+import { Home, HandHeart, AlertTriangle, Vote, User, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
@@ -12,6 +12,7 @@ export function BottomNavigation() {
     { path: '/dashboard', icon: Home, label: 'Home' },
     { path: '/help', icon: HandHeart, label: 'Help' },
     { path: '/crisis', icon: AlertTriangle, label: 'Crisis' },
+    { path: '/stablecoin', icon: DollarSign, label: 'Coin' },
     { path: '/governance', icon: Vote, label: 'Gov' },
     { path: '/profile', icon: User, label: 'Profile' },
   ];

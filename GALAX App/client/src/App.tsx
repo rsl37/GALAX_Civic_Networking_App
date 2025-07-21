@@ -11,6 +11,7 @@ import { HelpRequestsPage } from './pages/HelpRequestsPage';
 import { CrisisPage } from './pages/CrisisPage';
 import { GovernancePage } from './pages/GovernancePage';
 import { ProfilePage } from './pages/ProfilePage';
+import { StablecoinPage } from './pages/StablecoinPage';
 import { BottomNavigation } from './components/BottomNavigation';
 import { EmailVerificationBanner } from './components/EmailVerificationBanner';
 import { AnimatedBackground } from './components/AnimatedBackground';
@@ -60,6 +61,11 @@ function AppContent() {
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/stablecoin" element={
+              <ProtectedRoute>
+                <StablecoinPage />
               </ProtectedRoute>
             } />
             <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />

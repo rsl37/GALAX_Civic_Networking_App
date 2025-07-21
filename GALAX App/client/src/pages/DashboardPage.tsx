@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Clock,
   MapPin,
-  Plus
+  Plus,
+  DollarSign
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -150,7 +151,7 @@ export function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           <Card className="galax-card">
             <CardContent className="p-6">
@@ -161,6 +162,21 @@ export function DashboardPage() {
                 </div>
                 <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="galax-card">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Crowds Stablecoin</p>
+                  <p className="text-2xl font-bold text-green-600">{user?.crowds_balance || 0}</p>
+                  <p className="text-xs text-gray-500">≈ ${((user?.crowds_balance || 0) * 1.0).toFixed(2)} USD</p>
+                </div>
+                <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -185,10 +201,10 @@ export function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Reputation</p>
-                  <p className="text-2xl font-bold text-green-600">{user?.reputation_score || 0}</p>
+                  <p className="text-2xl font-bold text-orange-600">{user?.reputation_score || 0}</p>
                 </div>
-                <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <Users className="h-6 w-6 text-green-600" />
+                <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <Users className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
