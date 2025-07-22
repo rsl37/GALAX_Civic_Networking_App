@@ -187,8 +187,11 @@ sudo apt install nginx
 # Navigate to application directory
 cd /opt/galax/app
 
+# Set the repository URL (update this to your fork or preferred repository)
+export REPO_URL=https://github.com/rsl37/GALAX_App.git
+
 # Clone or copy application code
-git clone https://github.com/rsl37/GALAX_App.git .
+git clone ${REPO_URL} .
 cd "GALAX_App_files"
 
 # Install production dependencies
