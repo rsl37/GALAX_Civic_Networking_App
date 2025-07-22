@@ -107,14 +107,16 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     req.body = sanitizeObject(req.body);
   }
 
-  // Sanitize query parameters
+  // Sanitize query parameters (create new object as req.query is read-only)
   if (req.query) {
-    req.query = sanitizeObject(req.query);
+    const sanitizedQuery = sanitizeObject(req.query);
+    Object.assign(req.query, sanitizedQuery);
   }
 
   // Sanitize route parameters
   if (req.params) {
-    req.params = sanitizeObject(req.params);
+    const sanitizedParams = sanitizeObject(req.params);
+    Object.assign(req.params, sanitizedParams);
   }
 
   next();

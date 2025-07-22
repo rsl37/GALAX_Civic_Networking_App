@@ -186,7 +186,7 @@ GALAX_App/
 
 ### 🐛 Known Issues
 - TypeScript compilation errors in server code (47 errors, preventing production build).  
-  See [`TROUBLESHOOTING.md`](GALAX_App_files/TROUBLESHOOTING.md) for solutions and updates.
+  See [`IMPLEMENTATION_STATUS.md`](GALAX_App_files/IMPLEMENTATION_STATUS.md) for solutions and updates.
 - Missing API endpoints for phone verification and KYC
 - Incomplete CORS configuration
 - Input validation gaps in some endpoints
