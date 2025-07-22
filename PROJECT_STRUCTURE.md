@@ -176,4 +176,4 @@ The SQLite database contains 23 tables with proper relationships:
 - **Dev Server**: tsx for hot reloading
 - **CSS Processing**: PostCSS + Autoprefixer
 
-> **Note**: As of 2025-07-19 15:56:42 UTC, the TypeScript build has 47 compilation errors that need resolution, but the development server runs successfully. For more details and troubleshooting steps, please refer to the [TypeScript Compilation Errors Tracking Issue](https://github.com/your-repo/your-project/issues/123) or the [Troubleshooting Guide](https://your-docs-site.com/troubleshooting-typescript-errors).
+> **Note**: As of 2025-07-19 15:56:42 UTC, the TypeScript build has 47 compilation errors that need resolution, but the development server runs successfully. For more details and troubleshooting steps, please refer to the [TypeScript Compilation Errors Tracking Issue](https://github.com/example-org/example-repo/issues/456) or the [Troubleshooting Guide](https://docs.example.com/troubleshooting-typescript-errors).
