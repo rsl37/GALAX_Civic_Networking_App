@@ -190,6 +190,10 @@ export const corsConfig = {
 
     // Security: In production, be more strict about origins
     if (isProduction && !origin) {
+      if (process.env.ALLOW_NO_ORIGIN_IN_PRODUCTION === 'true') {
+        console.warn('⚠️ CORS: Allowed request with no origin in production due to configuration');
+        return callback(null, true);
+      }
       console.warn('🚨 CORS: Blocked request with no origin in production');
       return callback(new Error('Origin required in production'));
     }
