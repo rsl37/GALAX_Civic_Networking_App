@@ -306,7 +306,7 @@ export function VirtualizedList<T>({
 }
 
 // Hook for managing virtualized list state
-export const useVirtualizedList = <T>(
+export const useVirtualizedList = <T,>(
   items: T[],
   options?: {
     initialScrollTop?: number;
