@@ -463,4 +463,4 @@ For technical support or questions about the stablecoin system, please refer to 
 
 ---
 
-*This documentation covers the algorithmic stablecoin implementation as of January 2025. For the most current information, please refer to the system dashboard and API responses.*
+*This documentation reflects the current algorithmic stablecoin implementation. For the most up-to-date information, please refer to the system dashboard and API responses.*
