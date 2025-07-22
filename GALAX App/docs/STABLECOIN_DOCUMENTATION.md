@@ -308,7 +308,7 @@ interface StablecoinConfig {
   supplyAdjustmentRate: 0.5;  // 50% of deviation adjustment
   reserveRatio: 0.2;          // 20% minimum reserves
   maxSupplyChange: 0.05;      // 5% max change per rebalance
-  rebalanceInterval: 300000;  // 5 minutes between checks
+  rebalanceInterval: 300000;  // 5 minutes between checks (in milliseconds)
 }
 ```
 
