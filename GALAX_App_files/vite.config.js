@@ -61,6 +61,33 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.join(process.cwd(), 'dist/public'),
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Split vendor libraries into separate chunks
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ui-vendor': [
+              '@radix-ui/react-avatar',
+              '@radix-ui/react-checkbox', 
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-label',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-progress',
+              '@radix-ui/react-select',
+              '@radix-ui/react-slider',
+              '@radix-ui/react-slot',
+              '@radix-ui/react-switch',
+              '@radix-ui/react-toggle',
+              '@radix-ui/react-tooltip'
+            ],
+            'map-vendor': ['@googlemaps/js-api-loader', 'leaflet'],
+            'animation-vendor': ['framer-motion'],
+            'socket-vendor': ['socket.io-client'],
+            'utils-vendor': ['clsx', 'class-variance-authority', 'tailwind-merge']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 400
     },
     clearScreen: false,
     server: {
