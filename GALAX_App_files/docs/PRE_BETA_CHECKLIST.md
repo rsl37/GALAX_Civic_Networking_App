@@ -8,6 +8,8 @@ This document provides a comprehensive review of the GALAX civic platform build 
 **Note**: The readiness percentage is an estimate based on completed features versus unresolved blockers, with critical issues weighted more heavily.
 
 **Current Status**: 65% Beta Ready - Significant blockers and critical fixes needed before beta launch
+
+**Clarification**: "Beta Ready" refers to the readiness of the platform for beta testing, focusing on core functionality and stability. "Production Ready" refers to the readiness for a full public release, emphasizing complete feature implementation, scalability, and robustness. These metrics are calculated independently and may differ significantly.
 **Code Base**: 6,466+ frontend lines, 4,334+ backend lines
 **Database**: 23 tables, operational with test data
 **Major Blocker**: 47 TypeScript compilation errors
