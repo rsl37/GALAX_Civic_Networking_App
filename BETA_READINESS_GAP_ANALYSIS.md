@@ -16,7 +16,7 @@
 │   ├── REPOSITORY_ANALYSIS_REPORT.md
 │   ├── Legal/
 │   └── GALAX_Project_Workspace.md
-└── GALAX App/ (Actual Application) ✅
+└── GALAX_App_files/ (Actual Application) ✅
     ├── client/ (Frontend)
     ├── server/ (Backend API)
     ├── docs/ (Technical Documentation)
