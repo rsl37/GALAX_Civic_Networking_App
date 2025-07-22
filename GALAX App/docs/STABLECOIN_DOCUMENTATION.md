@@ -231,7 +231,7 @@ Returns detailed stability and performance metrics.
       "isHealthy": true,
       "activeSources": 3,
       "confidence": 0.95,
-      "lastUpdate": "EXAMPLE_TIMESTAMP",
+      "lastUpdate": "2025-01-14T12:00:00Z",
       "issues": []
     }
   }
