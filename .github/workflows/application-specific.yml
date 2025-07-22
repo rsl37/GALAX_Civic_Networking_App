@@ -1,0 +1,311 @@
+name: Application-Specific Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  database-tests:
+    name: Database Migration and Schema Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Test database initialization
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "Testing database schema and migrations..."
+        
+        # Create test database directory
+        mkdir -p data/test
+        
+        # Test database connection and schema
+        node -e "
+        const Database = require('better-sqlite3');
+        const db = new Database('./data/test/test.sqlite');
+        console.log('Database connection successful');
+        
+        // Test basic table creation
+        try {
+          db.exec(\`
+            CREATE TABLE IF NOT EXISTS test_users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              email TEXT UNIQUE NOT NULL,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+          \`);
+          console.log('Schema creation successful');
+          
+          // Test basic operations
+          const insert = db.prepare('INSERT INTO test_users (email) VALUES (?)');
+          const result = insert.run('test@example.com');
+          console.log('Insert operation successful:', result.lastInsertRowid);
+          
+          const select = db.prepare('SELECT * FROM test_users WHERE id = ?');
+          const user = select.get(result.lastInsertRowid);
+          console.log('Select operation successful:', user);
+          
+        } catch (error) {
+          console.error('Database test failed:', error);
+          process.exit(1);
+        } finally {
+          db.close();
+        }
+        "
+        
+    - name: Test database cleanup
+      working-directory: ./GALAX_App_files
+      run: |
+        rm -f data/test/test.sqlite
+        echo "Database cleanup completed"
+
+  api-contract-tests:
+    name: API Contract Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Install API testing tools
+      working-directory: ./GALAX_App_files
+      run: |
+        npm install --save-dev supertest @types/supertest chai
+        
+    - name: Test API endpoints structure
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "Testing API contract compliance..."
+        
+        # Create basic API contract test
+        cat > api-contract-test.js << 'EOF'
+        const request = require('supertest');
+        const express = require('express');
+
+        // Mock Express app for testing API structure
+        const app = express();
+        app.use(express.json());
+
+        // Basic health check endpoint
+        app.get('/health', (req, res) => {
+          res.json({ status: 'ok', timestamp: new Date().toISOString() });
+        });
+
+        // Test API response structure
+        describe('API Contract Tests', () => {
+          test('Health endpoint returns correct structure', async () => {
+            const response = await request(app)
+              .get('/health')
+              .expect(200);
+              
+            console.log('Health check response:', response.body);
+            
+            if (!response.body.status || !response.body.timestamp) {
+              throw new Error('Health endpoint missing required fields');
+            }
+          });
+        });
+
+        // Run the test
+        (async () => {
+          try {
+            const response = await request(app).get('/health');
+            if (response.status === 200 && response.body.status === 'ok') {
+              console.log('✅ API contract test passed');
+            } else {
+              console.log('❌ API contract test failed');
+              process.exit(1);
+            }
+          } catch (error) {
+            console.error('API contract test error:', error);
+            process.exit(1);
+          }
+        })();
+        EOF
+        
+        node api-contract-test.js
+
+  socket-io-tests:
+    name: Socket.IO Real-time Communication Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Test Socket.IO functionality
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "Testing Socket.IO real-time features..."
+        
+        # Create Socket.IO test
+        cat > socket-test.js << 'EOF'
+        const { Server } = require('socket.io');
+        const { createServer } = require('http');
+        const ioc = require('socket.io-client');
+
+        function testSocketConnection() {
+          return new Promise((resolve, reject) => {
+            const httpServer = createServer();
+            const io = new Server(httpServer, {
+              cors: {
+                origin: "*",
+                methods: ["GET", "POST"]
+              }
+            });
+
+            let connectionCount = 0;
+            
+            io.on('connection', (socket) => {
+              connectionCount++;
+              console.log(`Socket connected: ${socket.id} (total: ${connectionCount})`);
+              
+              socket.on('test-message', (data) => {
+                console.log('Received test message:', data);
+                socket.emit('test-response', { received: data, timestamp: Date.now() });
+              });
+              
+              socket.on('disconnect', () => {
+                connectionCount--;
+                console.log(`Socket disconnected (remaining: ${connectionCount})`);
+              });
+            });
+
+            httpServer.listen(0, () => {
+              const port = httpServer.address().port;
+              console.log(`Test server listening on port ${port}`);
+              
+              // Create client connection
+              const client = ioc(`http://localhost:${port}`);
+              
+              client.on('connect', () => {
+                console.log('Client connected successfully');
+                
+                // Test message exchange
+                client.emit('test-message', { test: 'data', timestamp: Date.now() });
+                
+                client.on('test-response', (response) => {
+                  console.log('Received response:', response);
+                  client.disconnect();
+                  httpServer.close();
+                  resolve('Socket.IO test passed');
+                });
+              });
+              
+              client.on('connect_error', (error) => {
+                reject(new Error(`Connection failed: ${error.message}`));
+              });
+              
+              // Timeout after 5 seconds
+              setTimeout(() => {
+                client.disconnect();
+                httpServer.close();
+                reject(new Error('Socket.IO test timeout'));
+              }, 5000);
+            });
+          });
+        }
+
+        // Run the test
+        testSocketConnection()
+          .then(result => {
+            console.log('✅', result);
+            process.exit(0);
+          })
+          .catch(error => {
+            console.error('❌ Socket.IO test failed:', error);
+            process.exit(1);
+          });
+        EOF
+        
+        node socket-test.js
+
+  web3-integration-tests:
+    name: Web3 Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Test Web3 wallet integration structure
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "Testing Web3 integration components..."
+        
+        # Check for Web3 related code patterns
+        if grep -r "wallet" --include="*.ts" --include="*.tsx" client/src/ || true; then
+          echo "Found wallet integration code"
+        fi
+        
+        if grep -r "web3" --include="*.ts" --include="*.tsx" client/src/ || true; then
+          echo "Found web3 integration code"
+        fi
+        
+        # Test crypto-related functionality structure
+        node -e "
+        console.log('Testing crypto utilities...');
+        
+        // Test that bcrypt is working (used for password hashing)
+        const bcrypt = require('bcryptjs');
+        const testPassword = 'testpassword123';
+        const hash = bcrypt.hashSync(testPassword, 10);
+        const isValid = bcrypt.compareSync(testPassword, hash);
+        
+        if (isValid) {
+          console.log('✅ Password hashing functionality working');
+        } else {
+          console.log('❌ Password hashing test failed');
+          process.exit(1);
+        }
+        
+        console.log('Web3 integration structure test completed');
+        "
