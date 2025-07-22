@@ -114,6 +114,27 @@ import {
   logSecurityEvent
 } from './middleware/securityManager.js';
 
+// Import versioning middleware
+import {
+  detectApiVersion,
+  validateApiVersion,
+  addVersioningHeaders,
+  getApiVersionInfo
+} from './middleware/versioning.js';
+
+// Import monitoring middleware
+import {
+  collectMetrics,
+  trackError,
+  trackFeatureUsage,
+  trackUserAction,
+  getSystemMetrics,
+  getPerformanceMetrics,
+  getErrorMetrics,
+  getUserMetrics,
+  getHealthMetrics
+} from './middleware/monitoring.js';
+
 dotenv.config();
 
 console.log('🚀 Starting server initialization...');
@@ -180,6 +201,14 @@ app.use(requestLogger);
 
 // Apply comprehensive security middleware stack
 app.use(comprehensiveSecurityMiddleware);
+
+// API versioning middleware
+app.use('/api', detectApiVersion);
+app.use('/api', validateApiVersion);
+app.use('/api', addVersioningHeaders);
+
+// Monitoring and metrics collection
+app.use('/api', collectMetrics);
 
 // Body parsing middleware with security
 app.use(express.json({ 
@@ -251,6 +280,57 @@ app.get('/api/test-db', async (req, res) => {
       success: false,
       error: {
         message: 'Database connection failed',
+        statusCode: 500
+      }
+    });
+  }
+});
+
+// API version information endpoint
+app.get('/api/version', getApiVersionInfo);
+
+// Enhanced monitoring and analytics endpoints
+app.get('/api/monitoring/health', authenticateToken, getHealthMetrics);
+app.get('/api/monitoring/metrics/system', authenticateToken, getSystemMetrics);
+app.get('/api/monitoring/metrics/performance', authenticateToken, getPerformanceMetrics);
+app.get('/api/monitoring/metrics/errors', authenticateToken, getErrorMetrics);
+app.get('/api/monitoring/metrics/users', authenticateToken, getUserMetrics);
+
+// Error reporting endpoint for frontend
+app.post('/api/monitoring/errors', async (req, res): Promise<void> => {
+  try {
+    const { message, stack, componentStack, errorId, timestamp, userAgent, url, userId } = req.body;
+    
+    console.error('🐛 Frontend Error Report:', {
+      errorId,
+      message,
+      url,
+      userId,
+      timestamp
+    });
+    
+    // Track the error in our monitoring system
+    const error = new Error(message);
+    error.stack = stack;
+    trackError(error, req, 'frontend');
+    
+    // In production, you might want to send this to external error tracking service
+    // await sendToExternalErrorTracker({ message, stack, componentStack, errorId, timestamp, userAgent, url, userId });
+    
+    res.json({
+      success: true,
+      data: {
+        errorId,
+        message: 'Error report received',
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error reporting endpoint failed:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to process error report',
         statusCode: 500
       }
     });
@@ -331,6 +411,9 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
     }
 
     const token = generateToken(user.id);
+    
+    // Track user registration
+    trackUserAction('registration', user.id);
     
     console.log('✅ User registered successfully:', user.id);
     res.json({ 
@@ -435,6 +518,9 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       recordSuccessfulAttempt(req.lockoutKey);
     }
     
+    // Track user login
+    trackUserAction('login', user.id);
+    
     console.log('✅ Login successful:', user.id);
     res.json({ 
       success: true,
@@ -483,20 +569,21 @@ app.post('/api/auth/forgot-password', passwordResetLimiter, validatePasswordRese
   }
 });
 
-app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res) => {
+app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res): Promise<void> => {
   try {
     const { token } = req.body;
     
     console.log('🔍 Validating reset token');
     
     if (!token) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Token is required',
           statusCode: 400
         }
       });
+      return;
     }
 
     const userId = await validatePasswordResetToken(token);
@@ -1388,12 +1475,27 @@ app.post('/api/help-requests', authenticateToken, uploadLimiter, upload.single('
   }
 });
 
-app.get('/api/help-requests', authenticateToken, async (req: AuthRequest, res) => {
+app.get('/api/help-requests', authenticateToken, async (req: AuthRequest, res): Promise<void> => {
   try {
-    const { status, category, urgency, limit = 50 } = req.query;
+    const { 
+      status, 
+      category, 
+      urgency, 
+      limit = 50, 
+      offset = 0, 
+      page = 1,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+      search
+    } = req.query;
     
-    console.log('📋 Fetching help requests:', { status, category, urgency, limit });
+    console.log('📋 Fetching help requests:', { status, category, urgency, limit, offset, page, sortBy, sortOrder, search });
     
+    const pageSize = Math.min(parseInt(limit as string), 100); // Max 100 items per page
+    const pageNumber = parseInt(page as string);
+    const offsetNumber = parseInt(offset as string) || (pageNumber - 1) * pageSize;
+    
+    // Build base query
     let query = db
       .selectFrom('help_requests')
       .innerJoin('users', 'users.id', 'help_requests.requester_id')
@@ -1411,14 +1513,15 @@ app.get('/api/help-requests', authenticateToken, async (req: AuthRequest, res) =
         'help_requests.media_type',
         'help_requests.status',
         'help_requests.created_at',
+        'help_requests.updated_at',
         'help_requests.rating',
         'users.username as requester_username',
         'users.avatar_url as requester_avatar',
+        'users.reputation_score as requester_reputation',
         'helper.username as helper_username'
-      ])
-      .orderBy('help_requests.created_at', 'desc')
-      .limit(Math.min(parseInt(limit as string), 100)); // Max 100 items
+      ]);
 
+    // Add filters
     if (status) {
       query = query.where('help_requests.status', '=', status as string);
     }
@@ -1428,13 +1531,85 @@ app.get('/api/help-requests', authenticateToken, async (req: AuthRequest, res) =
     if (urgency) {
       query = query.where('help_requests.urgency', '=', urgency as string);
     }
+    if (search) {
+      query = query.where((eb) => eb.or([
+        eb('help_requests.title', 'like', `%${search}%`),
+        eb('help_requests.description', 'like', `%${search}%`),
+        eb('users.username', 'like', `%${search}%`)
+      ]));
+    }
+
+    // Get total count for pagination
+    const countQuery = query.clearSelect().select(db.fn.count('help_requests.id').as('total'));
+    const totalResult = await countQuery.executeTakeFirst();
+    const total = Number(totalResult?.total || 0);
+
+    // Add sorting
+    const validSortFields = ['created_at', 'updated_at', 'urgency', 'status', 'title'];
+    const sortField = validSortFields.includes(sortBy as string) ? sortBy as string : 'created_at';
+    const order = sortOrder === 'asc' ? 'asc' : 'desc';
+    
+    query = query.orderBy(`help_requests.${sortField}` as any, order);
+    
+    // Add secondary sort by id for consistent pagination
+    if (sortField !== 'created_at') {
+      query = query.orderBy('help_requests.created_at', 'desc');
+    }
+    query = query.orderBy('help_requests.id', 'desc');
+
+    // Apply pagination
+    query = query.limit(pageSize).offset(offsetNumber);
 
     const helpRequests = await query.execute();
     
-    console.log('✅ Fetched help requests:', helpRequests.length);
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / pageSize);
+    const hasNext = pageNumber < totalPages;
+    const hasPrev = pageNumber > 1;
+    
+    const pagination = {
+      current_page: pageNumber,
+      per_page: pageSize,
+      total_items: total,
+      total_pages: totalPages,
+      has_next_page: hasNext,
+      has_previous_page: hasPrev,
+      next_page: hasNext ? pageNumber + 1 : null,
+      previous_page: hasPrev ? pageNumber - 1 : null,
+      first_item: offsetNumber + 1,
+      last_item: Math.min(offsetNumber + pageSize, total),
+      links: {
+        first: `/api/help-requests?page=1&limit=${pageSize}`,
+        last: `/api/help-requests?page=${totalPages}&limit=${pageSize}`,
+        next: hasNext ? `/api/help-requests?page=${pageNumber + 1}&limit=${pageSize}` : null,
+        prev: hasPrev ? `/api/help-requests?page=${pageNumber - 1}&limit=${pageSize}` : null
+      }
+    };
+    
+    console.log('✅ Fetched help requests:', {
+      count: helpRequests.length,
+      total,
+      page: pageNumber,
+      totalPages
+    });
+    
     res.json({ 
       success: true,
-      data: helpRequests
+      data: helpRequests,
+      pagination,
+      meta: {
+        filters_applied: {
+          status: status || null,
+          category: category || null,
+          urgency: urgency || null,
+          search: search || null
+        },
+        sort: {
+          field: sortField,
+          order: order
+        },
+        request_timestamp: new Date().toISOString()
+      }
     });
   } catch (error) {
     console.error('❌ Help requests fetch error:', error);

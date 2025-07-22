@@ -15,6 +15,7 @@ import { StablecoinPage } from './pages/StablecoinPage';
 import { BottomNavigation } from './components/BottomNavigation';
 import { EmailVerificationBanner } from './components/EmailVerificationBanner';
 import { AnimatedBackground } from './components/AnimatedBackground';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -79,11 +80,33 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </BrowserRouter>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Log to console in development
+        console.error('App Error Boundary:', error, errorInfo);
+        
+        // In production, could send to monitoring service
+        if (process.env.NODE_ENV === 'production') {
+          // Analytics or error reporting service
+          console.log('Error reported to monitoring service');
+        }
+      }}
+    >
+      <BrowserRouter>
+        <AuthProvider>
+          <ErrorBoundary fallback={
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Error</h2>
+                <p className="text-gray-600">Please refresh the page and try again.</p>
+              </div>
+            </div>
+          }>
+            <AppContent />
+          </ErrorBoundary>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

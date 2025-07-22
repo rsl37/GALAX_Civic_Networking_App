@@ -126,7 +126,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 };
 
 // IP validation middleware
-export const validateIP = (req: Request, res: Response, next: NextFunction) => {
+export const validateIP = (req: Request, res: Response, next: NextFunction): void => {
   const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   
   // Log suspicious activity
@@ -142,7 +142,7 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
   for (const pattern of blockedIPPatterns) {
     if (clientIP.includes(pattern)) {
       console.warn(`🚨 Blocked request from suspicious IP: ${clientIP}`);
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           message: 'Access denied',
@@ -150,48 +150,119 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
         },
         timestamp: new Date().toISOString()
       });
+      return;
     }
   }
   
   next();
 };
 
-// CORS security configuration
+// Advanced CORS security configuration for production
 export const corsConfig = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     const allowedOrigins = [
-      'http://localhost:3000', // Development frontend
-      'http://localhost:5173', // Vite dev server
-      'https://preview--faithfully-finished-shop.instance.app', // Production frontend
-      process.env.FRONTEND_URL, // Environment variable frontend URL
+      // Development origins
+      ...(isDevelopment ? [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5173'
+      ] : []),
+      
+      // Production origins
+      ...(isProduction ? [
+        'https://galax-app.com',
+        'https://www.galax-app.com',
+        'https://app.galax-network.org'
+      ] : []),
+      
+      // Environment-specific origins
+      process.env.FRONTEND_URL,
+      process.env.PRODUCTION_FRONTEND_URL,
+      process.env.STAGING_FRONTEND_URL,
+      
+      // Additional trusted origins from environment
+      ...(process.env.TRUSTED_ORIGINS ? process.env.TRUSTED_ORIGINS.split(',') : [])
     ].filter(Boolean);
 
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Security: In production, be more strict about origins
+    if (isProduction && !origin) {
+      if (process.env.ALLOW_NO_ORIGIN_IN_PRODUCTION === 'true') {
+        console.warn('⚠️ CORS: Allowed request with no origin in production due to configuration');
+        return callback(null, true);
+      }
+      console.warn('🚨 CORS: Blocked request with no origin in production');
+      return callback(new Error('Origin required in production'));
+    }
+    
+    // Allow requests with no origin in development (mobile apps, curl, etc.)
+    if (!origin && isDevelopment) {
+      return callback(null, true);
+    }
 
-    if (allowedOrigins.includes(origin)) {
+    // Check against allowed origins
+    if (origin && allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`🚨 CORS blocked origin: ${origin}`);
+      console.warn(`🚨 CORS blocked origin: ${origin}`, {
+        allowedOrigins: allowedOrigins.length,
+        isProduction,
+        timestamp: new Date().toISOString()
+      });
       callback(new Error('Not allowed by CORS'));
     }
   },
+  
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  
+  // Allowed HTTP methods
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  
+  // Allowed request headers
   allowedHeaders: [
     'Origin',
     'X-Requested-With', 
     'Content-Type', 
     'Accept', 
     'Authorization',
-    'Cache-Control'
+    'Cache-Control',
+    'X-CSRF-Token',
+    'X-Request-ID',
+    'X-API-Version',
+    'X-Client-Version',
+    'X-Platform',
+    'X-Device-ID',
+    'If-None-Match',
+    'If-Modified-Since'
   ],
+  
+  // Headers exposed to the client
   exposedHeaders: [
     'X-Total-Count',
     'X-Page-Count',
-    'X-Has-Next-Page'
+    'X-Has-Next-Page',
+    'X-Has-Previous-Page',
+    'X-Current-Page',
+    'X-Per-Page',
+    'X-Rate-Limit-Remaining',
+    'X-Rate-Limit-Reset',
+    'X-Request-ID',
+    'X-Response-Time',
+    'X-API-Version',
+    'Link',
+    'ETag',
+    'Last-Modified'
   ],
-  maxAge: 86400 // 24 hours
+  
+  // Preflight cache duration (24 hours)
+  maxAge: 86400,
+  
+  // Handle preflight requests
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Request logging middleware

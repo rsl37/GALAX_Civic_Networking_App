@@ -9,7 +9,7 @@ const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 const ATTEMPT_WINDOW = 60 * 60 * 1000; // 1 hour window
 
-export const accountLockoutMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const accountLockoutMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const { email } = req.body;
   const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   const key = `${clientIP}-${email || 'no-email'}`;
@@ -22,7 +22,7 @@ export const accountLockoutMiddleware = async (req: Request, res: Response, next
     const remainingTime = Math.ceil((attempt.lockUntil.getTime() - now.getTime()) / 1000 / 60);
     console.log(`🔒 Account locked for IP ${clientIP}, email ${email}. Remaining: ${remainingTime} minutes`);
     
-    return res.status(423).json({
+    res.status(423).json({
       success: false,
       error: {
         message: `Account temporarily locked due to too many failed attempts. Try again in ${remainingTime} minutes.`,
@@ -31,6 +31,7 @@ export const accountLockoutMiddleware = async (req: Request, res: Response, next
       },
       timestamp: new Date().toISOString()
     });
+    return;
   }
   
   // Clean up old attempts outside the window
