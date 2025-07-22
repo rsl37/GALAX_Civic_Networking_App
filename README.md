@@ -70,7 +70,7 @@ GALAX_App_files/
 
 ## 📑 Key Documentation
 
-- [`PROJECT_STRUCTURE.md`](GALAX_App_files/PROJECT_STRUCTURE.md)  
+- [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)  
   *Complete directory tree and file/folder explanations.*
 
 - [`SOCIAL_IMPACT_INTEGRATION_ASSESSMENT.md`](GALAX_App_files/docs/SOCIAL_IMPACT_INTEGRATION_ASSESSMENT.md)  

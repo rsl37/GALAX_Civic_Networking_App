@@ -3,7 +3,7 @@
 Below is an overview diagram of the GALAX App folder structure and main files:
 
 ```
-GALAX App/
+GALAX_App_files/
 ├── components.json
 ├── IMPLEMENTATION_STATUS.md
 ├── package.json
