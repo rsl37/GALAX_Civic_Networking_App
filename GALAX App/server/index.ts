@@ -483,20 +483,21 @@ app.post('/api/auth/forgot-password', passwordResetLimiter, validatePasswordRese
   }
 });
 
-app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res) => {
+app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res): Promise<void> => {
   try {
     const { token } = req.body;
     
     console.log('🔍 Validating reset token');
     
     if (!token) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Token is required',
           statusCode: 400
         }
       });
+      return;
     }
 
     const userId = await validatePasswordResetToken(token);

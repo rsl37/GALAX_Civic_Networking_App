@@ -126,7 +126,7 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
 };
 
 // IP validation middleware
-export const validateIP = (req: Request, res: Response, next: NextFunction) => {
+export const validateIP = (req: Request, res: Response, next: NextFunction): void => {
   const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   
   // Log suspicious activity
@@ -142,7 +142,7 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
   for (const pattern of blockedIPPatterns) {
     if (clientIP.includes(pattern)) {
       console.warn(`🚨 Blocked request from suspicious IP: ${clientIP}`);
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           message: 'Access denied',
@@ -150,6 +150,7 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
         },
         timestamp: new Date().toISOString()
       });
+      return;
     }
   }
   
