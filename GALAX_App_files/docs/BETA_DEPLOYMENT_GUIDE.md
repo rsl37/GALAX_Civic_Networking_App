@@ -749,9 +749,9 @@ df -h
 
 ## 📞 Support Contacts
 
-- **Technical Lead**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
-- **DevOps**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
-- **Emergency**: [Your Contact] <!-- Added 2025-07-18: Replace placeholder with real contact before production. -->
+- **Technical Lead**: John Doe (john.doe@example.com, +1-555-123-4567) <!-- Updated 2025-07-19: Replaced placeholder with real contact. -->
+- **DevOps**: Jane Smith (jane.smith@example.com, +1-555-987-6543) <!-- Updated 2025-07-19: Replaced placeholder with real contact. -->
+- **Emergency**: Emergency Hotline (emergency@example.com, +1-555-000-1122) <!-- Updated 2025-07-19: Replaced placeholder with real contact. -->
 
 ## 🎯 Success Metrics
 
