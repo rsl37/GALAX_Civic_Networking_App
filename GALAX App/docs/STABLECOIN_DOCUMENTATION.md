@@ -225,7 +225,7 @@ Returns detailed stability and performance metrics.
       "high": 1.0078,
       "low": 0.9967,
       "average": 1.0012,
-      "change24h": 0.15
+      "change24hAbsolute": 0.15
     },
     "oracle": {
       "isHealthy": true,
