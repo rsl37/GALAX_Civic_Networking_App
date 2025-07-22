@@ -1,4 +1,17 @@
 // Missing API endpoints that need to be implemented
+import express from 'express';
+import multer from 'multer';
+import { authenticateToken, AuthRequest } from './auth.js';
+
+const app = express();
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 // 1. Profile Update Endpoint
 app.put('/api/user/profile', authenticateToken, async (req: AuthRequest, res) => {
@@ -31,3 +44,5 @@ app.post('/api/kyc/upload-document', authenticateToken, upload.single('document'
 app.get('/api/kyc/status', authenticateToken, async (req: AuthRequest, res) => {
   // Get KYC verification status
 });
+
+export default app;

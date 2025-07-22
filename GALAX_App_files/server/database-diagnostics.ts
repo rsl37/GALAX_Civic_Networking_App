@@ -72,7 +72,7 @@ export async function diagnoseDatabaseFile() {
     `).all();
     
     console.log('📋 Tables in database:', tables.length);
-    tables.forEach(table => {
+    tables.forEach((table: any) => {
       console.log('  - ', table.name);
     });
     
@@ -297,7 +297,7 @@ export async function createInitialDatabase() {
   `).all();
   
   console.log('📋 Created tables:', tables.length);
-  tables.forEach(table => {
+  tables.forEach((table: any) => {
     console.log('  ✅', table.name);
   });
   

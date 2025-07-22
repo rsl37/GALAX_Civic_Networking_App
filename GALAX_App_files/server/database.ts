@@ -163,6 +163,21 @@ export interface DatabaseSchema {
     created_at: string;
     updated_at: string;
   };
+  email_verification_tokens: {
+    id: number;
+    user_id: number;
+    token: string;
+    expires_at: string;
+    used_at: string | null;
+    created_at: string;
+  };
+  sqlite_master: {
+    type: string;
+    name: string;
+    tbl_name: string;
+    rootpage: number;
+    sql: string;
+  };
 }
 
 const dataDirectory = process.env.DATA_DIRECTORY || './data';
@@ -346,7 +361,7 @@ try {
   `).all();
   
   console.log('📋 Database tables found:', tables.length);
-  tables.forEach(table => {
+  tables.forEach((table: any) => {
     console.log('  ✅', table.name);
   });
   

@@ -202,13 +202,14 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
 
     if (existingUser) {
       console.log('❌ Registration failed: User already exists');
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'User already exists with this email, username, or wallet address',
           statusCode: 400
         }
       });
+      return;
     }
 
     const passwordHash = password ? await hashPassword(password) : null;
@@ -234,13 +235,14 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
 
     if (!user) {
       console.log('❌ Registration failed: Failed to create user');
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false,
         error: {
           message: 'Failed to create user account',
           statusCode: 500
         }
       });
+      return;
     }
 
     // Send email verification if email provided
@@ -303,38 +305,41 @@ app.post('/api/auth/login', authLimiter, validateLogin, async (req, res) => {
 
     if (!user) {
       console.log('❌ Login failed: User not found');
-      return res.status(401).json({ 
+      res.status(401).json({ 
         success: false,
         error: {
           message: 'Invalid credentials',
           statusCode: 401
         }
       });
+      return;
     }
 
     // If email login, verify password
     if (email && password) {
       if (!user.password_hash) {
         console.log('❌ Login failed: No password hash for email user');
-        return res.status(401).json({ 
+        res.status(401).json({ 
           success: false,
           error: {
             message: 'Invalid credentials',
             statusCode: 401
           }
         });
+      return;
       }
       
       const isValid = await comparePassword(password, user.password_hash);
       if (!isValid) {
         console.log('❌ Login failed: Invalid password');
-        return res.status(401).json({ 
+        res.status(401).json({ 
           success: false,
           error: {
             message: 'Invalid credentials',
             statusCode: 401
           }
         });
+      return;
       }
     }
 
@@ -395,25 +400,27 @@ app.post('/api/auth/validate-reset-token', async (req, res) => {
     console.log('🔍 Validating reset token');
     
     if (!token) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Token is required',
           statusCode: 400
         }
       });
+      return;
     }
 
     const userId = await validatePasswordResetToken(token);
     
     if (!userId) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Invalid or expired token',
           statusCode: 400
         }
       });
+      return;
     }
 
     console.log('✅ Reset token is valid');
@@ -436,13 +443,14 @@ app.post('/api/auth/reset-password', passwordResetLimiter, validatePasswordReset
     const userId = await validatePasswordResetToken(token);
     
     if (!userId) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Invalid or expired token',
           statusCode: 400
         }
       });
+      return;
     }
 
     // Hash new password
@@ -482,13 +490,14 @@ app.post('/api/auth/send-email-verification', emailLimiter, authenticateToken, a
     const success = await resendEmailVerification(userId);
     
     if (!success) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Failed to send verification email',
           statusCode: 400
         }
       });
+      return;
     }
 
     console.log('✅ Email verification sent successfully');
@@ -511,13 +520,14 @@ app.post('/api/auth/verify-email', validateEmailVerification, async (req, res) =
     const userId = await validateEmailVerificationToken(token);
     
     if (!userId) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Invalid or expired verification token',
           statusCode: 400
         }
       });
+      return;
     }
 
     // Mark email as verified
@@ -554,13 +564,14 @@ app.get('/api/user/profile', authenticateToken, async (req: AuthRequest, res) =>
 
     if (!user) {
       console.log('❌ Profile fetch failed: User not found');
-      return res.status(404).json({ 
+      res.status(404).json({ 
         success: false,
         error: {
           message: 'User not found',
           statusCode: 404
         }
       });
+      return;
     }
 
     console.log('✅ Profile fetched successfully for:', user.username);
@@ -591,13 +602,14 @@ app.put('/api/user/profile', authenticateToken, validateProfileUpdate, async (re
         .executeTakeFirst();
         
       if (existingUser) {
-        return res.status(400).json({ 
+        res.status(400).json({ 
           success: false,
           error: {
             message: 'Username is already taken',
             statusCode: 400
           }
         });
+      return;
       }
     }
 
@@ -732,13 +744,14 @@ app.post('/api/help-requests', authenticateToken, uploadLimiter, upload.single('
 
     if (!helpRequest) {
       console.log('❌ Help request creation failed');
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false,
         error: {
           message: 'Failed to create help request',
           statusCode: 500
         }
       });
+      return;
     }
 
     // Broadcast new help request to all connected users via socket manager
@@ -823,13 +836,14 @@ app.post('/api/help-requests/:id/offer-help', authenticateToken, async (req: Aut
     const helpRequestId = parseInt(req.params.id);
     
     if (isNaN(helpRequestId) || helpRequestId <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'Invalid help request ID',
           statusCode: 400
         }
       });
+      return;
     }
     
     console.log('🤝 Offering help:', { helpRequestId, helperId: req.userId });
@@ -844,24 +858,26 @@ app.post('/api/help-requests/:id/offer-help', authenticateToken, async (req: Aut
 
     if (!helpRequest) {
       console.log('❌ Help request not found or already assigned');
-      return res.status(404).json({ 
+      res.status(404).json({ 
         success: false,
         error: {
           message: 'Help request not found or already assigned',
           statusCode: 404
         }
       });
+      return;
     }
 
     // Prevent users from helping their own requests
     if (helpRequest.requester_id === req.userId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'You cannot offer help on your own request',
           statusCode: 400
         }
       });
+      return;
     }
 
     // Update help request with helper
@@ -922,13 +938,14 @@ app.get('/api/chat/:helpRequestId/messages', authenticateToken, async (req: Auth
     const helpRequestId = parseInt(req.params.helpRequestId);
     
     if (isNaN(helpRequestId) || helpRequestId <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'Invalid help request ID',
           statusCode: 400
         }
       });
+      return;
     }
     
     console.log('💬 Fetching chat messages:', { helpRequestId, userId: req.userId });
@@ -982,13 +999,14 @@ app.post('/api/crisis-alerts', authenticateToken, crisisLimiter, validateCrisisA
 
     if (!alert) {
       console.log('❌ Crisis alert creation failed');
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false,
         error: {
           message: 'Failed to create crisis alert',
           statusCode: 500
         }
       });
+      return;
     }
 
     console.log('✅ Crisis alert created:', alert.id);
@@ -1060,13 +1078,14 @@ app.post('/api/proposals', authenticateToken, validateProposal, async (req: Auth
 
     if (!proposal) {
       console.log('❌ Proposal creation failed');
-      return res.status(500).json({ 
+      res.status(500).json({ 
         success: false,
         error: {
           message: 'Failed to create proposal',
           statusCode: 500
         }
       });
+      return;
     }
 
     console.log('✅ Proposal created:', proposal.id);
@@ -1144,34 +1163,37 @@ app.post('/api/proposals/:id/vote', authenticateToken, validateVote, async (req:
       .executeTakeFirst();
       
     if (!proposal) {
-      return res.status(404).json({ 
+      res.status(404).json({ 
         success: false,
         error: {
           message: 'Proposal not found',
           statusCode: 404
         }
       });
+      return;
     }
     
     if (proposal.status !== 'active' || new Date(proposal.deadline) < new Date()) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Voting period has ended',
           statusCode: 400
         }
       });
+      return;
     }
     
     // Prevent users from voting on their own proposals
     if (proposal.created_by === userId) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'You cannot vote on your own proposal',
           statusCode: 400
         }
       });
+      return;
     }
     
     // Check if user already voted
@@ -1183,13 +1205,14 @@ app.post('/api/proposals/:id/vote', authenticateToken, validateVote, async (req:
       .executeTakeFirst();
       
     if (existingVote) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'You have already voted on this proposal',
           statusCode: 400
         }
       });
+      return;
     }
     
     // Insert vote
@@ -1258,13 +1281,14 @@ app.post('/api/claim', authenticateToken, async (req: AuthRequest, res) => {
     const { amount = 100 } = req.body;
     
     if (typeof amount !== 'number' || amount <= 0 || amount > 1000) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'Invalid claim amount. Must be between 1 and 1000',
           statusCode: 400
         }
       });
+      return;
     }
     
     console.log('💎 AP claim request:', { userId: req.userId, amount });
@@ -1278,13 +1302,14 @@ app.post('/api/claim', authenticateToken, async (req: AuthRequest, res) => {
 
     if (!user || user.ap_balance < amount) {
       console.log('❌ AP claim failed: Insufficient balance');
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Insufficient AP balance',
           statusCode: 400
         }
       });
+      return;
     }
 
     // Deduct AP

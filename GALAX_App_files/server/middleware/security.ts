@@ -69,10 +69,7 @@ export const securityHeaders = helmet({
   dnsPrefetchControl: { allow: false },
   
   // Disable download options for IE
-  ieNoOpen: true,
-  
-  // Cross-domain policies
-  crossdomain: false
+  ieNoOpen: true
 });
 
 // Request sanitization middleware
@@ -140,7 +137,7 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
   for (const pattern of blockedIPPatterns) {
     if (clientIP.includes(pattern)) {
       console.warn(`🚨 Blocked request from suspicious IP: ${clientIP}`);
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           message: 'Access denied',
@@ -148,6 +145,7 @@ export const validateIP = (req: Request, res: Response, next: NextFunction) => {
         },
         timestamp: new Date().toISOString()
       });
+      return;
     }
   }
   
@@ -243,7 +241,7 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
   
   const allowedExtensions = mimeTypeMap[file.mimetype];
   if (!allowedExtensions || !ext || !allowedExtensions.includes(ext)) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: 'File extension does not match MIME type',
@@ -251,6 +249,7 @@ export const fileUploadSecurity = (req: Request, res: Response, next: NextFuncti
       },
       timestamp: new Date().toISOString()
     });
+    return;
   }
   
   // Log file upload for monitoring
