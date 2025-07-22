@@ -54,10 +54,13 @@ export const detectApiVersion = (req: Request, res: Response, next: NextFunction
   }
 
   // Validate version
-  const isSupported = API_VERSIONS.supported.includes(version as any);
-  const isDeprecated = API_VERSIONS.deprecated.includes(version as any);
-  const isSunset = API_VERSIONS.sunset.includes(version as any);
+  const isValidVersion = (v: string): v is (typeof API_VERSIONS.supported)[number] => {
+    return API_VERSIONS.supported.includes(v as (typeof API_VERSIONS.supported)[number]);
+  };
 
+  const isSupported = isValidVersion(version) && API_VERSIONS.supported.includes(version);
+  const isDeprecated = isValidVersion(version) && API_VERSIONS.deprecated.includes(version);
+  const isSunset = isValidVersion(version) && API_VERSIONS.sunset.includes(version);
   // Set version info on request
   req.apiVersion = version;
   req.apiVersionInfo = {
