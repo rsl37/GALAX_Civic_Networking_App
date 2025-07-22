@@ -1,5 +1,5 @@
 # GALAX App Directory Structure
-<!-- Updated 2025-07-19 15:56:42 UTC: Complete structure review and current state documentation -->
+<!-- Updated: Complete structure review and current state documentation -->
 
 Below is a comprehensive overview of the GALAX App folder structure, reflecting the current implementation as of 2025-07-19 15:56:42 UTC:
 
@@ -113,7 +113,7 @@ GALAX_App_files/
 ```
 
 ## Database Schema (23 Tables)
-<!-- Added 2025-07-19 15:56:42 UTC: Current database structure -->
+<!-- Added: Current database structure -->
 
 The SQLite database contains 23 tables with proper relationships:
 
@@ -151,7 +151,7 @@ The SQLite database contains 23 tables with proper relationships:
 - `transactions` - Transaction history
 
 ## Technology Stack Summary
-<!-- Added 2025-07-19 15:56:42 UTC: Technology overview -->
+<!-- Added: Technology overview -->
 
 ### Frontend (React + TypeScript)
 - **Framework**: React 18.2.0 with TypeScript

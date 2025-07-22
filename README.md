@@ -13,7 +13,7 @@ It features real-time help requests, skill and interest-based matching, decentra
 ---
 
 ## 📁 Project Structure
-<!-- Updated 2025-07-19 15:56:42 UTC: Revised to reflect current state -->
+<!-- Updated: Revised to reflect current state -->
 
 The repository is organized as follows:
 
@@ -107,7 +107,7 @@ GALAX_App/
 ---
 
 ## 📑 Key Documentation
-<!-- Updated 2025-07-19 15:56:42 UTC: Updated file paths and added new documentation -->
+<!-- Updated: Updated file paths and added new documentation -->
 
 - [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md)  
   *Complete directory tree and file/folder explanations.*
@@ -156,7 +156,7 @@ GALAX_App/
 ---
 
 ## 🛠️ Features & Roadmap
-<!-- Updated 2025-07-19 15:56:42 UTC: Current implementation status -->
+<!-- Updated: Current implementation status -->
 
 ### ✅ Implemented Features
 - **Mobile-first, responsive UI** - Complete with Tailwind CSS
@@ -184,7 +184,7 @@ GALAX_App/
 - **Advanced gamification** - Badge and reputation system
 - **Blockchain integration** - Decentralized governance features
 
-### 🐛 Known Issues (2025-07-19)
+### 🐛 Known Issues
 - TypeScript compilation errors in server code (47 errors, preventing production build).  
   See [`TROUBLESHOOTING.md`](GALAX_App_files/TROUBLESHOOTING.md) for solutions and updates.
 - Missing API endpoints for phone verification and KYC

@@ -1,11 +1,11 @@
 # GALAX: Web-3 Civic Networking Platform  
 **Whitepaper**
-<!-- Updated 2025-07-19 15:56:42 UTC: Current whitepaper reflecting implementation status -->
+<!-- Updated: Current whitepaper reflecting implementation status -->
 
 ---
 
 ## Table of Contents
-<!-- Updated 2025-07-19 15:56:42 UTC: Updated table of contents -->
+<!-- Updated: Updated table of contents -->
 
 1. [Introduction](#introduction)
 2. [Vision & Mission](#vision--mission)

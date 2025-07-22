@@ -1,8 +1,8 @@
 # GALAX: Web-3 Civic Networking Platform - Full Project Workspace
-<!-- Updated 2025-07-19 15:56:42 UTC: Current project status and implementation phase tracking -->
+<!-- Updated: Current project status and implementation phase tracking -->
 
 ## Overview
-<!-- Updated 2025-07-19 15:56:42 UTC: Project overview with current implementation status -->
+<!-- Updated: Project overview with current implementation status -->
 
 **GALAX** is a next-generation civic engagement platform leveraging Web3 technologies, real-time mapping, anime-inspired UI, and token-based incentives. This project workspace tracks all phases, completed milestones, and upcoming deliverables.
 
