@@ -194,7 +194,7 @@ Returns recent supply adjustment history.
       "currentPrice": 1.0312,
       "targetPrice": 1.0000,
       "newSupply": 1005000,
-      "timestamp": 1641902400000
+      "timestamp": "YYYY-MM-DDTHH:mm:ssZ"
     }
   ]
 }
