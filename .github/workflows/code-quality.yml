@@ -92,7 +92,7 @@ jobs:
         fi
         
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       if: success()
       with:
         directory: ./GALAX_App_files/coverage
