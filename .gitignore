@@ -76,3 +76,17 @@ data/uploads/*
 # Additional runtime
 stats.html
 storybook-static/
+
+# GitHub Actions test artifacts
+test-results/
+playwright-report/
+coverage/
+.lighthouseci/
+bundle-size-report.md
+api-contract-test.js
+socket-test.js
+Dockerfile.test
+*.test.ts
+*.test.js
+e2e/
+**/src/__tests__/

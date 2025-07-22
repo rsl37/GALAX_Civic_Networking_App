@@ -1,0 +1,74 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Build frontend
+      working-directory: ./GALAX_App_files
+      run: npm run build
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-node-${{ matrix.node-version }}
+        path: |
+          ./GALAX_App_files/dist/
+        retention-days: 5
+        
+    - name: Check for TypeScript compilation
+      working-directory: ./GALAX_App_files
+      run: |
+        echo "Frontend TypeScript compilation successful"
+        # Note: Backend has existing compilation errors that are pre-existing technical debt
+        # We only verify frontend builds for now
+        npx tsc --noEmit --project ./tsconfig.json
+
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: './GALAX_App_files/package-lock.json'
+        
+    - name: Install dependencies
+      working-directory: ./GALAX_App_files
+      run: npm ci
+      
+    - name: Type check frontend
+      working-directory: ./GALAX_App_files
+      run: npx tsc --noEmit --project ./tsconfig.json

@@ -1,5 +1,12 @@
 # GALAX: Web-3 Civic Networking Platform - Full Project Workspace
 
+[![CI](https://github.com/rsl37/GALAX_App/workflows/Continuous%20Integration/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/ci.yml)
+[![Security](https://github.com/rsl37/GALAX_App/workflows/Security%20Checks/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/security.yml)
+[![Tests](https://github.com/rsl37/GALAX_App/workflows/Testing/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/testing.yml)
+[![Code Quality](https://github.com/rsl37/GALAX_App/workflows/Code%20Quality/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/code-quality.yml)
+[![Performance](https://github.com/rsl37/GALAX_App/workflows/Performance%20Checks/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/performance.yml)
+[![Deployment](https://github.com/rsl37/GALAX_App/workflows/Deployment%20Readiness/badge.svg)](https://github.com/rsl37/GALAX_App/actions/workflows/deployment.yml)
+
 Welcome to the **GALAX** project workspace!  
 This repository contains the complete project structure, documentation, and technical plans for developing *GALAX*, a next-generation, web3-enabled civic/social networking platform.
 

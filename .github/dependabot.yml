@@ -1,0 +1,64 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/GALAX_App_files"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "rsl37"
+    assignees:
+      - "rsl37"
+    commit-message:
+      prefix: "chore(deps):"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    # Group dependency updates
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@types/*"
+          - "*-dev"
+          - "*-test"
+      development-dependencies:
+        patterns:
+          - "@types/*"
+          - "*-dev"
+          - "*-test"
+          - "eslint*"
+          - "prettier*"
+          - "jest*"
+          - "vitest*"
+          - "@testing-library/*"
+    # Security updates
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Ignore specific updates if needed
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+        
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    reviewers:
+      - "rsl37"
+    assignees:
+      - "rsl37"
+    commit-message:
+      prefix: "chore(actions):"
+    labels:
+      - "github-actions"
+      - "automated"

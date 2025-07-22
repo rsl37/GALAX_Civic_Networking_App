@@ -1,0 +1,21 @@
+name: "CodeQL Configuration"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+
+paths:
+  - GALAX_App_files/client/src
+  - GALAX_App_files/server
+  - GALAX_App_files/scripts
+
+paths-ignore:
+  - node_modules
+  - dist
+  - build
+  - coverage
+  - "**/*.test.ts"
+  - "**/*.test.js"
+  - "**/*.spec.ts"
+  - "**/*.spec.js"
