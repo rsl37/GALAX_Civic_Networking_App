@@ -13,16 +13,16 @@ export function BottomNavigation() {
     { 
       path: '/dashboard', 
       icon: Home, 
-      label: 'Home',
-      ariaLabel: 'Navigate to dashboard and home page',
-      description: 'View your dashboard with latest updates'
+      label: 'Dashboard',
+      ariaLabel: 'Navigate to main dashboard',
+      description: 'Access your personalized community dashboard'
     },
     { 
-      path: '/help', 
+      path: '/help-requests', 
       icon: HandHeart, 
-      label: 'Help',
+      label: 'Requests',
       ariaLabel: 'Navigate to help requests section',
-      description: 'Request or offer help to community members'
+      description: 'Browse and manage help requests'
     },
     { 
       path: '/crisis', 

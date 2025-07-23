@@ -25,6 +25,8 @@ interface UserStats {
   crisisReported: number;
   proposalsCreated: number;
   votescast: number;
+  communityScore: number;
+  badgesEarned: string[];
   recentActivity: any[];
 }
 
