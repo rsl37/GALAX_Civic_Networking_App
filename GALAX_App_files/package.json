@@ -1,7 +1,13 @@
 {
+<<<<<<< HEAD
   "name": "mimo-magic-starter",
   "private": true,
   "version": "0.1.0",
+=======
+  "name": "galax-civic-platform",
+  "private": true,
+  "version": "0.2.0",
+>>>>>>> feature/package-updates
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",

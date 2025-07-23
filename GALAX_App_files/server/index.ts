@@ -1,10 +1,19 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+<<<<<<< HEAD
 import dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
 import cors from 'cors';
+=======
+import dotenv from 'dotenv';
+import multer from 'multer';
+import path from 'path';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+>>>>>>> feature/security-enhancements
 import { setupStaticServing } from './static-serve.js';
 import { db } from './database.js';
 import { hashPassword, comparePassword, generateToken, authenticateToken, AuthRequest } from './auth.js';

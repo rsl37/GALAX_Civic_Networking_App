@@ -26,8 +26,14 @@ function AppContent() {
   const { user } = useAuth();
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
       <AnimatedBackground />
+=======
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50">
+      <AnimatedBackground />
+      <div className="fixed inset-0 bg-pattern opacity-5"></div>
+>>>>>>> feature/ui-improvements
       <div className="relative z-10">
         {/* Email verification banner */}
         {user && <EmailVerificationBanner />}
