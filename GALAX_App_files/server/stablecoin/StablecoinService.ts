@@ -3,8 +3,8 @@
  * Main service orchestrating the algorithmic stablecoin functionality
  */
 
-import { StablecoinContract, StablecoinConfig, SupplyAdjustment, DEFAULT_STABLECOIN_CONFIG } from './StablecoinContract.ts';
-import { PriceOracle, OracleConfig, DEFAULT_ORACLE_CONFIG, PriceData } from './PriceOracle.ts';
+import { StablecoinContract, StablecoinConfig, SupplyAdjustment, DEFAULT_STABLECOIN_CONFIG } from './StablecoinContract.js';
+import { PriceOracle, OracleConfig, DEFAULT_ORACLE_CONFIG, PriceData } from './PriceOracle.js';
 import { db } from '../database.js';
 import { sql } from 'kysely';
 

@@ -3,7 +3,7 @@
  * Unit tests for the algorithmic stablecoin smart contract logic
  */
 
-import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.ts';
+import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
 
 // Simple test framework
 interface TestResult {
