@@ -92,7 +92,10 @@ import {
   validateEmailVerification,
   validatePhoneVerification,
   validatePhoneVerificationConfirm,
-  validateFileUpload
+  validateFileUpload,
+  validateRequestSize,
+  validateEndpointSecurity,
+  validateJsonPayload
 } from './middleware/validation.js';
 import {
   accountLockoutMiddleware,
@@ -231,6 +234,10 @@ app.use(express.urlencoded({
 
 // Input sanitization
 app.use(sanitizeInput);
+
+// Add comprehensive validation security
+app.use('/api', validateJsonPayload);
+app.use('/api', validateApiVersion);
 
 // Apply general rate limiting to all API routes
 app.use('/api', apiLimiter);
