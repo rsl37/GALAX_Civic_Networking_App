@@ -3,9 +3,9 @@
  * Tests the complete stablecoin service integration
  */
 
-import { StablecoinService } from '../StablecoinService.js';
-import { DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
-import { DEFAULT_ORACLE_CONFIG } from '../PriceOracle.js';
+import { StablecoinService } from '../StablecoinService.ts';
+import { DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.ts';
+import { DEFAULT_ORACLE_CONFIG } from '../PriceOracle.ts';
 
 class IntegrationTestRunner {
   private service: StablecoinService;

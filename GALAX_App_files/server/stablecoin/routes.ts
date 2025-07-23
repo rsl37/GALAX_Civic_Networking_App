@@ -43,19 +43,21 @@ router.get('/status', async (req: Request, res: Response) => {
 router.get('/balance', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     const balance = await stablecoinService.getUserBalance(req.user.userId);
     
     if (!balance) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found'
       });
+      return;
     }
 
     res.json({
@@ -77,10 +79,11 @@ router.get('/balance', authenticateToken, async (req: AuthRequest, res: Response
 router.get('/transactions', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
@@ -146,10 +149,11 @@ router.get('/metrics', async (req: Request, res: Response) => {
 router.post('/rebalance', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     // TODO: Add admin role check
@@ -176,19 +180,21 @@ router.post('/rebalance', authenticateToken, async (req: AuthRequest, res: Respo
 router.post('/simulate-shock', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     const { severity } = req.body;
     
     if (typeof severity !== 'number' || severity < 0 || severity > 1) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Severity must be a number between 0 and 1'
       });
+      return;
     }
 
     stablecoinService.simulateMarketShock(severity);
@@ -212,10 +218,11 @@ router.post('/simulate-shock', authenticateToken, async (req: AuthRequest, res: 
 router.put('/config', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     // TODO: Add admin role check
@@ -242,10 +249,11 @@ router.put('/config', authenticateToken, async (req: AuthRequest, res: Response)
 router.post('/set-price', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: 'Authentication required'
       });
+      return;
     }
 
     // TODO: Add admin role check
@@ -253,10 +261,11 @@ router.post('/set-price', authenticateToken, async (req: AuthRequest, res: Respo
     const { price } = req.body;
     
     if (typeof price !== 'number' || price <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Price must be a positive number'
       });
+      return;
     }
 
     stablecoinService.setPrice(price);

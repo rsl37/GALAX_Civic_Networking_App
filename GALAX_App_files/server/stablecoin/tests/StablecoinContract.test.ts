@@ -3,7 +3,7 @@
  * Unit tests for the algorithmic stablecoin smart contract logic
  */
 
-import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
+import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.ts';
 
 // Simple test framework
 interface TestResult {
@@ -177,7 +177,12 @@ class TestRunner {
     });
 
     await this.test('Supply adjustment execution', () => {
-      const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 2000);
+      const config: StablecoinConfig = {
+        ...DEFAULT_STABLECOIN_CONFIG,
+        rebalanceInterval: 0 // Allow immediate rebalancing for testing
+      };
+      
+      const contract = new StablecoinContract(config, 10000, 2000);
       const initialSupply = contract.getSupplyInfo().totalSupply;
       
       // Add price data to trigger expansion

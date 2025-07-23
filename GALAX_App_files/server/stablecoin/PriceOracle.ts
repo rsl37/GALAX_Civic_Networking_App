@@ -4,7 +4,13 @@
  * In production, this would integrate with real price feeds like Chainlink, Band Protocol, etc.
  */
 
-import { PriceData } from './StablecoinContract.js';
+// Define PriceData interface locally to avoid circular dependency
+export interface PriceData {
+  price: number;
+  timestamp: number;
+  volume: number;
+  confidence: number; // Price confidence score 0-1
+}
 
 export interface PriceSource {
   name: string;

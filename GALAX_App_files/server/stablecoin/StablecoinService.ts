@@ -3,8 +3,8 @@
  * Main service orchestrating the algorithmic stablecoin functionality
  */
 
-import { StablecoinContract, StablecoinConfig, SupplyAdjustment, DEFAULT_STABLECOIN_CONFIG } from './StablecoinContract.js';
-import { PriceOracle, OracleConfig, DEFAULT_ORACLE_CONFIG, PriceData } from './PriceOracle.js';
+import { StablecoinContract, StablecoinConfig, SupplyAdjustment, DEFAULT_STABLECOIN_CONFIG } from './StablecoinContract.ts';
+import { PriceOracle, OracleConfig, DEFAULT_ORACLE_CONFIG, PriceData } from './PriceOracle.ts';
 import { db } from '../database.js';
 import { sql } from 'kysely';
 
@@ -145,10 +145,12 @@ export class StablecoinService {
       // Get total crowds_balance from all users
       const result = await db
         .selectFrom('users')
-        .select(['sum(crowds_balance) as total_supply'])
+        .select((eb) => [
+          eb.fn.sum('crowds_balance').as('total_supply')
+        ])
         .execute();
       
-      const totalSupply = result[0]?.total_supply || 0;
+      const totalSupply = Number(result[0]?.total_supply || 0);
       
       // Initialize contract with current supply
       if (totalSupply > 0) {
@@ -329,7 +331,7 @@ export class StablecoinService {
         })
         .execute();
 
-      return result[0].insertId as number;
+      return Number(result[0].insertId);
     } catch (error) {
       console.error('Error creating transaction:', error);
       throw error;
@@ -390,13 +392,20 @@ export class StablecoinService {
    */
   async getUserTransactions(userId: number, limit: number = 50): Promise<StablecoinTransaction[]> {
     try {
-      return await db
+      const results = await db
         .selectFrom('stablecoin_transactions')
         .selectAll()
         .where('user_id', '=', userId)
         .orderBy('created_at', 'desc')
         .limit(limit)
         .execute();
+      
+      // Map and cast the results to match the interface
+      return results.map(row => ({
+        ...row,
+        transaction_type: row.transaction_type as 'mint' | 'burn' | 'transfer' | 'rebalance',
+        status: row.status as 'pending' | 'completed' | 'failed'
+      }));
     } catch (error) {
       console.error('Error getting user transactions:', error);
       return [];
