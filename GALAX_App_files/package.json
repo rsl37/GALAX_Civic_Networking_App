@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
-  "name": "mimo-magic-starter",
-  "private": true,
-  "version": "0.1.0",
-=======
   "name": "galax-civic-platform",
   "private": true,
   "version": "0.2.0",
->>>>>>> feature/package-updates
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
@@ -29,7 +23,9 @@
     "@radix-ui/react-tooltip": "1.2.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
+    "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
+    "@types/helmet": "^0.0.48",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/leaflet": "^1.9.20",
     "@types/multer": "^2.0.0",
@@ -41,6 +37,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "16.6.1",
     "esbuild": "0.25.8",

@@ -20,14 +20,6 @@ import {
 import { motion } from 'framer-motion';
 
 interface UserStats {
-<<<<<<< HEAD
-  helpRequestsCreated: number;
-  helpOffered: number;
-  crisisReported: number;
-  proposalsCreated: number;
-  votescast: number;
-  recentActivity: any[];
-=======
   helpRequestsCreated: number;
   helpOffered: number;
   crisisReported: number;
@@ -36,7 +28,7 @@ interface UserStats {
   communityScore: number;
   badgesEarned: string[];
   recentActivity: any[];
->>>>>>> feature/dashboard-enhancements
+}
 
 interface HelpRequest {
   id: number;

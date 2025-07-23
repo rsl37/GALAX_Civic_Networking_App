@@ -10,22 +10,6 @@ export function BottomNavigation() {
   const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
 
   const navItems = [
-<<<<<<< HEAD
-    { 
-      path: '/dashboard', 
-      icon: Home, 
-      label: 'Home',
-      ariaLabel: 'Navigate to dashboard and home page',
-      description: 'View your dashboard with latest updates'
-    },
-    { 
-      path: '/help', 
-      icon: HandHeart, 
-      label: 'Help',
-      ariaLabel: 'Navigate to help requests section',
-      description: 'Request or offer help to community members'
-    },
-=======
     { 
       path: '/dashboard', 
       icon: Home, 
@@ -40,7 +24,6 @@ export function BottomNavigation() {
       ariaLabel: 'Navigate to help requests section',
       description: 'Browse and manage help requests'
     },
->>>>>>> feature/navigation-improvements
     { 
       path: '/crisis', 
       icon: AlertTriangle, 
