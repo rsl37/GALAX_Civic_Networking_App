@@ -202,7 +202,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
 
     if (existingUser) {
       console.log('❌ Registration failed: User already exists');
-      sendResponse(res, 400, { 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'User already exists with this email, username, or wallet address',
