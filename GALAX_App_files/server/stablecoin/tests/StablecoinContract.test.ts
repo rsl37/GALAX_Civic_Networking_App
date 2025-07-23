@@ -177,7 +177,12 @@ class TestRunner {
     });
 
     await this.test('Supply adjustment execution', () => {
-      const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 2000);
+      const config: StablecoinConfig = {
+        ...DEFAULT_STABLECOIN_CONFIG,
+        rebalanceInterval: 0 // Allow immediate rebalancing for testing
+      };
+      
+      const contract = new StablecoinContract(config, 10000, 2000);
       const initialSupply = contract.getSupplyInfo().totalSupply;
       
       // Add price data to trigger expansion

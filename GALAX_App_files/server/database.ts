@@ -202,6 +202,38 @@ export interface DatabaseSchema {
     created_at: string;
     updated_at: string;
   };
+  stablecoin_transactions: {
+    id: number;
+    user_id: number;
+    transaction_type: string;
+    amount: number;
+    price_at_time: number;
+    gas_fee: number;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  };
+  stablecoin_metrics: {
+    id: number;
+    timestamp: string;
+    total_supply: number;
+    reserve_pool: number;
+    current_price: number;
+    target_price: number;
+    deviation: number;
+    volatility: number;
+    stability_score: number;
+  };
+  supply_adjustments: {
+    id: number;
+    action: string;
+    amount: number;
+    reason: string;
+    target_price: number;
+    current_price: number;
+    new_supply: number;
+    timestamp: string;
+  };
 }
 
 const dataDirectory = process.env.DATA_DIRECTORY || './data';
