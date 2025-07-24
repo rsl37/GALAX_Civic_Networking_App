@@ -22,6 +22,94 @@
 - [ ] File upload limits set
 - [ ] Rate limiting implemented (if needed)
 
+## 🏥 Deployment Readiness Check
+
+Before proceeding with deployment, use the built-in deployment readiness check to validate your environment:
+
+### Automated Validation Script
+
+Run the comprehensive deployment check:
+
+```bash
+# Run deployment readiness check
+npm run deployment:check
+
+# Or run directly with tsx
+npx tsx scripts/deployment-check.js
+```
+
+This script validates:
+- ✅ **Environment Variables**: Required and optional variables
+- ✅ **File System**: Directory structure and permissions
+- ✅ **Database**: Connectivity and table existence
+- ✅ **Production Config**: Security and performance settings
+
+### Example Output
+
+```
+🚀 GALAX Deployment Readiness Check
+=====================================
+
+📊 DEPLOYMENT READINESS SUMMARY
+==============================
+Overall Status: ✅ READY
+Environment: production
+Timestamp: 2025-07-24T23:28:04.694Z
+
+Checks Summary:
+  ✅ Passed: 20
+  ❌ Failed: 0
+  ⚠️  Warnings: 5
+  📊 Total: 25
+```
+
+### Status Meanings
+
+- **✅ READY**: All critical checks passed, deployment recommended
+- **⚠️ WARNING**: Minor issues detected, deployment possible with warnings
+- **❌ NOT_READY**: Critical issues found, deployment blocked
+
+### API Endpoint
+
+You can also check deployment readiness via API:
+
+```bash
+# Check via API endpoint
+curl https://yourdomain.com/api/deployment/ready
+
+# Response includes detailed validation report
+{
+  "success": true,
+  "data": {
+    "overall_status": "ready",
+    "timestamp": "2025-07-24T23:28:04.694Z",
+    "environment": "production",
+    "checks": [...],
+    "summary": {
+      "passed": 20,
+      "failed": 0,
+      "warnings": 5,
+      "total": 25
+    }
+  }
+}
+```
+
+### Integration with CI/CD
+
+The deployment check can be integrated into your CI/CD pipeline:
+
+```yaml
+# GitHub Actions example
+- name: Check Deployment Readiness
+  run: npm run deployment:check
+  working-directory: ./GALAX_App_files
+```
+
+The script exits with appropriate codes:
+- `0`: Ready or warnings only
+- `1`: Critical failures detected
+
 ## 🔧 Environment Variables
 
 Create a `.env` file in production with:
@@ -199,6 +287,9 @@ curl https://yourdomain.com/api/health
 
 # Check database connection
 curl https://yourdomain.com/api/test-db
+
+# Check deployment readiness
+curl https://yourdomain.com/api/deployment/ready
 
 # Check PM2 status
 pm2 status
