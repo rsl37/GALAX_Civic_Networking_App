@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
-    "start": "tsx watch scripts/dev.ts"
+    "start": "tsx watch scripts/dev.ts",
+    "deployment:check": "tsx scripts/deployment-check.js"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",

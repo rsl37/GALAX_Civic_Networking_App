@@ -140,6 +140,9 @@ import {
   getHealthMetrics
 } from './middleware/monitoring.js';
 
+// Import deployment validation
+import { getDeploymentReadiness } from './deployment-validation.js';
+
 dotenv.config();
 
 console.log('🚀 Starting server initialization...');
@@ -294,6 +297,9 @@ app.get('/api/test-db', async (req, res) => {
 
 // API version information endpoint
 app.get('/api/version', getApiVersionInfo);
+
+// Deployment readiness check endpoint
+app.get('/api/deployment/ready', getDeploymentReadiness);
 
 // Enhanced monitoring and analytics endpoints
 app.get('/api/monitoring/health', authenticateToken, getHealthMetrics);
