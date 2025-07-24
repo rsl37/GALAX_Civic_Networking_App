@@ -98,7 +98,7 @@ When the system performs rebalancing:
 
 All user-specific endpoints require authentication via Bearer token:
 
-```
+```http
 Authorization: Bearer <your_jwt_token>
 ```
 
