@@ -65,6 +65,7 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             // Split vendor libraries into separate chunks
+            // Note: For larger components, consider using dynamic imports (import()) in your application code
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             'ui-vendor': [
               '@radix-ui/react-avatar',
