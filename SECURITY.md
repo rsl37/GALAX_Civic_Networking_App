@@ -1,23 +1,27 @@
-# GALAX_App Security Policy
+# Security Policy
 
 ## Supported Versions
 
-The latest release of GALAX_App is actively maintained with security updates. Older releases may not receive updates unless critical vulnerabilities are discovered.
+The GALAX App is currently in active development. Security updates are provided for the default branch ("main"). Older or experimental branches may not be supported.
 
-| Release | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
-| Older   | :x:                |
+| Version/Branch | Supported          |
+| -------------- | ------------------ |
+| main           | :white_check_mark: |
+| develop        | :white_check_mark: |
+| others         | :x:                |
 
 ## Security Features
 
-- Comprehensive security checks via GitHub Actions (CodeQL, dependency scan, secret scan)
-- Branch protection rules enforcing CI, code quality, security, and performance checks
-- Weekly Dependabot security updates
-- Secret scanning and push protection
+- Automated security checks (dependabot, CodeQL, secret scanning, npm audit)
+- Branch protection rules enforce CI, code review, and security status checks (see [.github/workflows/README.md](.github/workflows/README.md))
+- Comprehensive documentation on technical and social impact ([README.md](README.md))
 
 ## Reporting a Vulnerability
 
-Please report vulnerabilities confidentially via GitHub’s ["Report a security vulnerability"](https://github.com/rsl37/GALAX_App/security/advisories/new) page. Expect an initial response within 72 hours. Updates are provided as the issue is investigated. If the vulnerability is accepted, a fix and disclosure timeline will be communicated.
+Report any vulnerabilities confidentially via [GitHub Security Advisories](https://github.com/rsl37/GALAX_App/security/advisories/new).
+- Initial response: within 3 business days.
+- Updates: provided throughout triage and remediation.
+- If accepted: a fix and responsible disclosure will follow.
+- For more details, see the README and workflow documentation.
 
-For more on the security configuration and workflow, see [README.md](README.md) and [.github/workflows/README.md](.github/workflows/README.md).
+**Note:** As this app is still in development, critical issues should be reported before public deployment.
