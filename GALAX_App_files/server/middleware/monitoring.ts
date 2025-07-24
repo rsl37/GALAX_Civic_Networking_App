@@ -145,7 +145,7 @@ export const collectMetrics = (req: Request & { startTime?: number }, res: Respo
     // Track status codes
     metrics.requests.by_status[res.statusCode] = (metrics.requests.by_status[res.statusCode] || 0) + 1;
     
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();
