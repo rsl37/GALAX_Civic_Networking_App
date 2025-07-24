@@ -156,8 +156,10 @@ For production licensing and terms, see `LICENSE` (to be added).
 
 This repository requires access to various external services for proper operation. If you are experiencing connectivity issues behind a corporate firewall or restrictive network, please refer to our comprehensive firewall documentation:
 
-- **[FIREWALL_CONFIGURATION.md](FIREWALL_CONFIGURATION.md)** - Complete firewall allowlist and network requirements
-- **[GITHUB_SERVICES_FIREWALL.md](GITHUB_SERVICES_FIREWALL.md)** - Detailed GitHub services and endpoints
+- **[FIREWALL_ALLOWLIST.md](FIREWALL_ALLOWLIST.md)** - **Complete consolidated allowlist** with all domains and URLs
+- **[FIREWALL_CONFIGURATION.md](FIREWALL_CONFIGURATION.md)** - Detailed firewall configuration guide and network requirements
+- **[GITHUB_SERVICES_FIREWALL.md](GITHUB_SERVICES_FIREWALL.md)** - Comprehensive GitHub services and endpoints
+- **[QUICK_FIREWALL_SETUP.md](QUICK_FIREWALL_SETUP.md)** - Quick reference and platform-specific rules
 
 ### Quick Firewall Fix
 For immediate access, ensure these domains are allowlisted:
