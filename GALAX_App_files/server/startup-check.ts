@@ -46,7 +46,7 @@ export async function performStartupCheck() {
     for (const tableName of requiredTables) {
       try {
         const result = await sql`SELECT COUNT(*) as count FROM ${sql.id(tableName)}`.execute(db);
-        const count = result.rows[0]?.count || 0;
+        const count = (result.rows[0] as any)?.count || 0;
         
         console.log(`  ✅ ${tableName}: ${count} records`);
       } catch (error) {

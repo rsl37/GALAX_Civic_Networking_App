@@ -578,7 +578,7 @@ app.post('/api/auth/forgot-password', passwordResetLimiter, validatePasswordRese
   }
 });
 
-app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res): Promise<void> => {
+app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res) => {
   try {
     const { token } = req.body;
     
@@ -598,13 +598,14 @@ app.post('/api/auth/validate-reset-token', passwordResetLimiter, async (req, res
     const userId = await validatePasswordResetToken(token);
     
     if (!userId) {
-      return res.status(400).json({ 
+      res.status(400).json({ 
         success: false,
         error: {
           message: 'Invalid or expired token',
           statusCode: 400
         }
       });
+      return;
     }
 
     console.log('✅ Reset token is valid');

@@ -4,11 +4,11 @@ import { Request, Response, NextFunction } from 'express';
 export const API_VERSIONS = {
   v1: '1.0.0',
   v2: '2.0.0',
-  current: 'v1',
-  supported: ['v1'],
-  deprecated: [],
-  sunset: []
-} as const;
+  current: 'v1' as const,
+  supported: ['v1'] as const,
+  deprecated: [] as string[],
+  sunset: [] as string[]
+};
 
 export type ApiVersion = keyof typeof API_VERSIONS;
 
@@ -30,7 +30,7 @@ declare global {
 
 // Version detection middleware
 export const detectApiVersion = (req: Request, res: Response, next: NextFunction): void => {
-  let version = API_VERSIONS.current;
+  let version: string = API_VERSIONS.current;
   
   // Method 1: URL path versioning (/api/v1/users)
   const pathMatch = req.path.match(/^\/api\/(v\d+)\//);
@@ -54,11 +54,11 @@ export const detectApiVersion = (req: Request, res: Response, next: NextFunction
   }
 
   // Validate version
-  const isValidVersion = (v: string): v is (typeof API_VERSIONS.supported)[number] => {
-    return API_VERSIONS.supported.includes(v as (typeof API_VERSIONS.supported)[number]);
+  const isValidVersion = (v: string): v is string => {
+    return API_VERSIONS.supported.includes(v as any);
   };
 
-  const isSupported = isValidVersion(version) && API_VERSIONS.supported.includes(version);
+  const isSupported = isValidVersion(version) && API_VERSIONS.supported.includes(version as any);
   const isDeprecated = isValidVersion(version) && API_VERSIONS.deprecated.includes(version);
   const isSunset = isValidVersion(version) && API_VERSIONS.sunset.includes(version);
   // Set version info on request
@@ -202,7 +202,7 @@ export const isVersionSupported = (version: string): boolean => {
 };
 
 export const isVersionDeprecated = (version: string): boolean => {
-  return API_VERSIONS.deprecated.includes(version as any);
+  return API_VERSIONS.deprecated.includes(version);
 };
 
 export const getLatestVersion = (): string => {
