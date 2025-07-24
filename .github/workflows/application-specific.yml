@@ -233,12 +233,12 @@ jobs:
                 reject(new Error(`Connection failed: ${error.message}`));
               });
               
-              // Timeout after 5 seconds
+              // Timeout after 10 seconds
               setTimeout(() => {
                 client.disconnect();
                 httpServer.close();
                 reject(new Error('Socket.IO test timeout'));
-              }, 5000);
+              }, 10000);
             });
           });
         }

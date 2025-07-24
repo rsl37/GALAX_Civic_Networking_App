@@ -59,6 +59,8 @@ interface PaginationData {
   has_previous_page: boolean;
   next_page: number | null;
   previous_page: number | null;
+  first_item: number;
+  last_item: number;
 }
 
 interface ApiResponse {

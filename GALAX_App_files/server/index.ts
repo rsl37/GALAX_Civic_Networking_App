@@ -248,14 +248,11 @@ app.get('/api/health', (req, res) => {
   const socketHealth = socketManager.getHealthStatus();
   
   res.json({ 
-    success: true,
-    data: {
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      dataDirectory: process.env.DATA_DIRECTORY || './data',
-      sockets: socketHealth
-    }
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    dataDirectory: process.env.DATA_DIRECTORY || './data',
+    sockets: socketHealth
   });
 });
 

@@ -53,7 +53,7 @@ export function VirtualizedList<T>({
   const [scrollTop, setScrollTop] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollElementRef = useRef<HTMLDivElement>(null);
-  const scrollingTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollingTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastScrollTop = useRef(0);
   const [itemPositions, setItemPositions] = useState<ItemPosition[]>([]);
 
