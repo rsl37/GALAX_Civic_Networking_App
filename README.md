@@ -136,6 +136,22 @@ See [`IMPLEMENTATION_STATUS.md`](GALAX_App_files/IMPLEMENTATION_STATUS.md) for p
 2. Add your changes or new features.
 3. Submit a pull request with a detailed description.
 
+### 🔍 Merge Conflict Detection
+
+Use our conflict detection script to check for unmerged files:
+
+```bash
+./scripts/check-conflicts.sh
+```
+
+This script will:
+- ✅ Check for unmerged files (`git ls-files -u`)
+- ✅ Scan for conflict markers in source code  
+- ✅ Verify build system functionality
+- ✅ Provide summary of repository health
+
+For detailed analysis, see [`MERGE_CONFLICT_STATUS_REPORT.md`](MERGE_CONFLICT_STATUS_REPORT.md).
+
 ---
 
 ## 📜 License
