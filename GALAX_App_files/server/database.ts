@@ -244,23 +244,115 @@ console.log('📁 Data directory:', dataDirectory);
 console.log('📊 Database path:', databasePath);
 console.log('🔍 Absolute database path:', path.resolve(databasePath));
 
+/**
+ * Validates that a string is a safe SQL identifier (table name, column name, etc.)
+ * Only allows alphanumeric characters and underscores, must start with letter or underscore
+ */
+function validateSQLIdentifier(identifier: string, type: string = 'identifier'): void {
+  if (!identifier || typeof identifier !== 'string') {
+    throw new Error(`Invalid ${type}: must be a non-empty string`);
+  }
+  
+  if (identifier.length > 64) {
+    throw new Error(`Invalid ${type}: must be 64 characters or less`);
+  }
+  
+  // SQLite identifier rules: alphanumeric and underscore, must start with letter or underscore
+  const validIdentifierRegex = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+  if (!validIdentifierRegex.test(identifier)) {
+    throw new Error(`Invalid ${type}: must start with letter or underscore and contain only alphanumeric characters and underscores`);
+  }
+  
+  // Prevent SQL keywords and reserved words (basic list)
+  const reservedWords = [
+    'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TABLE',
+    'INDEX', 'DATABASE', 'SCHEMA', 'VIEW', 'TRIGGER', 'PROCEDURE', 'FUNCTION',
+    'UNION', 'JOIN', 'WHERE', 'FROM', 'ORDER', 'GROUP', 'HAVING', 'LIMIT'
+  ];
+  
+  if (reservedWords.includes(identifier.toUpperCase())) {
+    throw new Error(`Invalid ${type}: cannot use SQL reserved word '${identifier}'`);
+  }
+}
+
 async function checkColumnExists(db: Database.Database, tableName: string, columnName: string): Promise<boolean> {
   try {
+    // Validate inputs to prevent SQL injection
+    validateSQLIdentifier(tableName, 'table name');
+    validateSQLIdentifier(columnName, 'column name');
+    
+    // Use parameterized query approach by validating identifiers first, then using them safely
     const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
     return columns.some((col: any) => col.name === columnName);
   } catch (error) {
     console.error(`Error checking column ${columnName} in ${tableName}:`, error);
+    
+    // Re-throw validation errors to caller
+    if (error instanceof Error && error.message.includes('Invalid')) {
+      throw error;
+    }
+    
+    // For database errors, return false but log the specific error
+    if (error instanceof Error) {
+      console.error(`Database error while checking column: ${error.message}`);
+      console.error(`This may indicate the table '${tableName}' does not exist or is inaccessible`);
+    }
+    
     return false;
   }
 }
 
 async function safeAddColumn(db: Database.Database, tableName: string, columnName: string, columnDefinition: string) {
-  const exists = await checkColumnExists(db, tableName, columnName);
-  if (!exists) {
-    console.log(`📝 Adding column ${columnName} to ${tableName}`);
-    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
-  } else {
-    console.log(`✅ Column ${columnName} already exists in ${tableName}`);
+  try {
+    // Validate all inputs to prevent SQL injection
+    validateSQLIdentifier(tableName, 'table name');
+    validateSQLIdentifier(columnName, 'column name');
+    
+    // Validate column definition - only allow basic SQLite types and constraints
+    if (!columnDefinition || typeof columnDefinition !== 'string') {
+      throw new Error('Invalid column definition: must be a non-empty string');
+    }
+    
+    // Whitelist allowed column definition patterns
+    const allowedColumnDefinitionRegex = /^(INTEGER|TEXT|REAL|BLOB|NUMERIC)(\s+(DEFAULT\s+[A-Za-z0-9_'"\.\-\s]+|NOT\s+NULL|PRIMARY\s+KEY|UNIQUE|CHECK\s*\([^)]*\)))*$/i;
+    if (!allowedColumnDefinitionRegex.test(columnDefinition.trim())) {
+      throw new Error(`Invalid column definition: '${columnDefinition}' contains disallowed syntax`);
+    }
+    
+    const exists = await checkColumnExists(db, tableName, columnName);
+    if (!exists) {
+      console.log(`📝 Adding column ${columnName} to ${tableName}`);
+      
+      // Execute the ALTER TABLE statement with validated inputs
+      db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+      
+      console.log(`✅ Successfully added column ${columnName} to ${tableName}`);
+    } else {
+      console.log(`✅ Column ${columnName} already exists in ${tableName}`);
+    }
+  } catch (error) {
+    console.error(`Error adding column ${columnName} to ${tableName}:`, error);
+    
+    // Re-throw validation errors to caller
+    if (error instanceof Error && error.message.includes('Invalid')) {
+      throw error;
+    }
+    
+    // Handle specific database errors
+    if (error instanceof Error) {
+      if (error.message.includes('no such table')) {
+        throw new Error(`Table '${tableName}' does not exist`);
+      } else if (error.message.includes('duplicate column')) {
+        console.log(`ℹ️ Column ${columnName} already exists in ${tableName} (detected during ALTER)`);
+        return; // Not an error, just already exists
+      } else if (error.message.includes('syntax error')) {
+        throw new Error(`SQL syntax error when adding column: ${error.message}`);
+      } else {
+        throw new Error(`Database error when adding column: ${error.message}`);
+      }
+    }
+    
+    throw error;
   }
 }
 
