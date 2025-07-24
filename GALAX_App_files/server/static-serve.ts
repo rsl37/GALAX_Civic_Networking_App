@@ -21,7 +21,14 @@ export function setupStaticServing(app: express.Application) {
   app.get('*', (req, res) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith('/api/')) {
-      res.status(404).json({ error: 'API endpoint not found' });
+      res.status(404).json({
+        success: false,
+        error: {
+          message: 'API endpoint not found',
+          statusCode: 404
+        },
+        timestamp: new Date().toISOString()
+      });
       return;
     }
     
