@@ -111,7 +111,7 @@ export const validateProfileUpdate = [
     
   body('phone')
     .optional()
-    .isMobilePhone(['en-US', 'en-GB'])
+    .isMobilePhone('any')
     .withMessage('Please provide a valid phone number'),
     
   body('skills')
