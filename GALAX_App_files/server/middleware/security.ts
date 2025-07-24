@@ -1,6 +1,33 @@
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * Security Middleware Module
+ * 
+ * This module contains security middleware for Express applications with special
+ * handling for read-only request properties.
+ * 
+ * IMPORTANT NOTE: Express Read-Only Properties Workaround
+ * Express makes certain request properties (like req.query, req.params) read-only
+ * by default for security reasons. This means you cannot modify individual properties
+ * using methods like Object.assign(req.query, newValues) or spread operators.
+ * 
+ * The sanitizeInput middleware works around this limitation by completely reassigning
+ * the entire property (e.g., req.query = sanitizedQuery). This is a documented
+ * pattern for security middleware that needs to sanitize user input while preserving
+ * Express's read-only property protections.
+ * 
+ * Alternative approaches that DO NOT work:
+ * - Object.assign(req.query, sanitizedQuery) // Fails: read-only
+ * - { ...req.query, ...sanitizedQuery }      // Fails: doesn't modify req object
+ * - req.query.someKey = newValue             // Fails: read-only
+ * 
+ * The complete reassignment approach is secure because:
+ * 1. It preserves the original object structure
+ * 2. It sanitizes all nested properties recursively
+ * 3. It maintains Express's security model while allowing necessary sanitization
+ */
+
 // Configure Helmet security headers
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
@@ -113,7 +140,13 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
   }
 
   // Sanitize query parameters
+  // NOTE: Express req.query is read-only by default, but we can work around this limitation
+  // by reassigning the entire property. This is a documented pattern for security middleware
+  // that needs to modify read-only Express request properties.
+  // Alternative approaches like Object.assign(req.query, sanitizedQuery) won't work because
+  // the property descriptor prevents direct modification of individual keys.
   if (req.query) {
+    // Create a completely new sanitized query object and reassign the entire property
     req.query = sanitizeObject(req.query);
   }
 
