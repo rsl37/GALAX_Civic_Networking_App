@@ -302,13 +302,15 @@ Common HTTP status codes:
 The system operates with configurable parameters:
 
 ```typescript
+// The following interface defines the structure of the StablecoinConfig object.
+// The values provided in the comments are examples and not default values.
 interface StablecoinConfig {
-  targetPrice: 1.0;           // $1.00 USD peg
-  toleranceBand: 0.02;        // 2% tolerance before action
-  supplyAdjustmentRate: 0.5;  // 50% of deviation adjustment
-  reserveRatio: 0.2;          // 20% minimum reserves
-  maxSupplyChange: 0.05;      // 5% max change per rebalance
-  rebalanceInterval: 300000;  // 5 minutes between checks (in milliseconds)
+  targetPrice: 1.0;           // Example: $1.00 USD peg
+  toleranceBand: 0.02;        // Example: 2% tolerance before action
+  supplyAdjustmentRate: 0.5;  // Example: 50% of deviation adjustment
+  reserveRatio: 0.2;          // Example: 20% minimum reserves
+  maxSupplyChange: 0.05;      // Example: 5% max change per rebalance
+  rebalanceInterval: 300000;  // Example: 5 minutes between checks (in milliseconds)
 }
 ```
 
