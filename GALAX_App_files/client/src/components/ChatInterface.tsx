@@ -27,7 +27,8 @@ export function ChatInterface({ helpRequestId, currentUser }: ChatInterfaceProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const token = localStorage.getItem('token');
-  const socket = useSocket(token);
+  const socketConnection = useSocket(token);
+  const socket = socketConnection?.socket;
 
   useEffect(() => {
     fetchMessages();

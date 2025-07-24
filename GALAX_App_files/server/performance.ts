@@ -36,10 +36,10 @@ export async function createPerformanceIndexes() {
     'CREATE INDEX IF NOT EXISTS idx_crisis_alerts_status ON crisis_alerts(status)',
     'CREATE INDEX IF NOT EXISTS idx_crisis_alerts_severity ON crisis_alerts(severity)',
     
-    // Chat messages indexes
-    'CREATE INDEX IF NOT EXISTS idx_chat_messages_help_request ON chat_messages(help_request_id)',
-    'CREATE INDEX IF NOT EXISTS idx_chat_messages_sender ON chat_messages(sender_id)',
-    'CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at)',
+    // Messages indexes
+    'CREATE INDEX IF NOT EXISTS idx_messages_help_request ON messages(help_request_id)',
+    'CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)',
+    'CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)',
     
     // Verification tokens indexes
     'CREATE INDEX IF NOT EXISTS idx_email_verification_user ON email_verification_tokens(user_id)',

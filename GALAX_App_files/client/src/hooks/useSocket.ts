@@ -21,8 +21,8 @@ export function useSocket(token: string | null) {
     connectionTime: null
   });
   
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
-  const heartbeatIntervalRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const connectionStartTime = useRef<number>(0);
 
   useEffect(() => {
