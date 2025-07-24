@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
-    "start": "vite build && node dist/server.js",
+    "start": "vite build && node <correct-output-path>",
     "dev": "tsx watch scripts/dev.ts"
   },
   "dependencies": {
