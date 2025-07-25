@@ -8,8 +8,15 @@ const REQUIRED_ENV_VARS = [
   'NODE_ENV',
   'PORT',
   'DATA_DIRECTORY',
-  'JWT_SECRET',
-  'FRONTEND_URL'
+  'JWT_SECRET'
+];
+
+// Important environment variables for production (not strictly required but recommended)
+const RECOMMENDED_ENV_VARS = [
+  'CLIENT_ORIGIN',    // CORS configuration
+  'DATABASE_URL',     // Production database connection
+  'SOCKET_PATH',      // Custom Socket.IO path
+  'FRONTEND_URL'      // Legacy frontend URL support
 ];
 
 // Optional environment variables with validation
@@ -18,7 +25,11 @@ const OPTIONAL_ENV_VARS = [
   'SMTP_PORT', 
   'SMTP_USER',
   'SMTP_PASS',
-  'SMTP_FROM'
+  'SMTP_FROM',
+  'TRUSTED_ORIGINS',
+  'TWILIO_SID',
+  'TWILIO_AUTH_TOKEN',
+  'TWILIO_PHONE_NUMBER'
 ];
 
 // Minimum requirements for production
@@ -75,6 +86,26 @@ export function validateEnvironmentVariables(): ValidationResult[] {
     }
   }
 
+  // Check recommended environment variables
+  for (const envVar of RECOMMENDED_ENV_VARS) {
+    const value = process.env[envVar];
+    if (!value) {
+      results.push({
+        check: `Recommended Environment Variable: ${envVar}`,
+        status: 'warning',
+        message: `Recommended environment variable ${envVar} is not set. This may limit functionality in production`,
+        details: { variable: envVar, recommended: true }
+      });
+    } else {
+      results.push({
+        check: `Recommended Environment Variable: ${envVar}`,
+        status: 'pass',
+        message: `Recommended environment variable ${envVar} is properly configured`,
+        details: { variable: envVar, length: value.length }
+      });
+    }
+  }
+
   // Validate JWT_SECRET strength
   const jwtSecret = process.env.JWT_SECRET;
   if (jwtSecret) {
@@ -111,6 +142,86 @@ export function validateEnvironmentVariables(): ValidationResult[] {
         status: 'pass',
         message: `Optional environment variable ${envVar} is configured`,
         details: { variable: envVar }
+      });
+    }
+  }
+
+  // Validate DATABASE_URL format if provided
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl) {
+    try {
+      const url = new URL(databaseUrl);
+      if (url.protocol === 'postgres:' || url.protocol === 'postgresql:') {
+        results.push({
+          check: 'DATABASE_URL Format',
+          status: 'pass',
+          message: 'DATABASE_URL is properly formatted for PostgreSQL',
+          details: { protocol: url.protocol, host: url.hostname, database: url.pathname }
+        });
+      } else {
+        results.push({
+          check: 'DATABASE_URL Format',
+          status: 'warning',
+          message: `DATABASE_URL protocol '${url.protocol}' may not be supported. Expected 'postgres:' or 'postgresql:'`,
+          details: { protocol: url.protocol }
+        });
+      }
+    } catch (error) {
+      results.push({
+        check: 'DATABASE_URL Format',
+        status: 'fail',
+        message: 'DATABASE_URL is not a valid URL format',
+        details: { error: (error as Error).message }
+      });
+    }
+  }
+
+  // Validate CLIENT_ORIGIN format if provided
+  const clientOrigin = process.env.CLIENT_ORIGIN;
+  if (clientOrigin) {
+    try {
+      const url = new URL(clientOrigin);
+      if (url.protocol === 'https:' || (process.env.NODE_ENV !== 'production' && url.protocol === 'http:')) {
+        results.push({
+          check: 'CLIENT_ORIGIN Format',
+          status: 'pass',
+          message: 'CLIENT_ORIGIN is properly formatted',
+          details: { protocol: url.protocol, host: url.hostname }
+        });
+      } else {
+        results.push({
+          check: 'CLIENT_ORIGIN Format',
+          status: process.env.NODE_ENV === 'production' ? 'fail' : 'warning',
+          message: 'CLIENT_ORIGIN should use HTTPS in production',
+          details: { protocol: url.protocol, environment: process.env.NODE_ENV }
+        });
+      }
+    } catch (error) {
+      results.push({
+        check: 'CLIENT_ORIGIN Format',
+        status: 'fail',
+        message: 'CLIENT_ORIGIN is not a valid URL format',
+        details: { error: (error as Error).message }
+      });
+    }
+  }
+
+  // Validate SOCKET_PATH format if provided
+  const socketPath = process.env.SOCKET_PATH;
+  if (socketPath) {
+    if (socketPath.startsWith('/') && socketPath.length > 1) {
+      results.push({
+        check: 'SOCKET_PATH Format',
+        status: 'pass',
+        message: 'SOCKET_PATH is properly formatted',
+        details: { path: socketPath }
+      });
+    } else {
+      results.push({
+        check: 'SOCKET_PATH Format',
+        status: 'warning',
+        message: 'SOCKET_PATH should start with / and have additional path components',
+        details: { path: socketPath }
       });
     }
   }

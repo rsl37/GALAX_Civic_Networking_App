@@ -151,9 +151,17 @@ console.log('Data directory:', process.env.DATA_DIRECTORY || './data');
 
 const app = express();
 const server = createServer(app);
+
+// Socket.IO configuration with custom path support
+const socketPath = process.env.SOCKET_PATH || '/socket.io';
+console.log('🔌 Socket.IO path:', socketPath);
+
 const io = new Server(server, {
+  path: socketPath,
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000',
+    origin: process.env.NODE_ENV === 'production' ? 
+      (process.env.CLIENT_ORIGIN || false) : 
+      'http://localhost:3000',
     methods: ['GET', 'POST']
   },
   pingTimeout: 60000,
