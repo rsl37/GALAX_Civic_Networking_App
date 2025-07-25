@@ -117,7 +117,7 @@ jobs:
         echo "Testing API contract compliance..."
         
         # Create API contract test for the actual running application
-        cat > api-contract-test.js << 'EOF'
+        cat > api-contract-test.cjs << 'EOF'
         const http = require('http');
 
         function testHealthEndpoint() {
@@ -182,7 +182,7 @@ jobs:
           });
         EOF
         
-        node api-contract-test.js
+        node api-contract-test.cjs
         
     - name: Stop application
       if: always()
