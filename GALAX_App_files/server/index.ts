@@ -208,6 +208,20 @@ const upload = multer({
   }
 });
 
+// Health check endpoint (no security restrictions for monitoring)
+app.get('/api/health', (req, res) => {
+  console.log('🏥 Health check requested');
+  const socketHealth = socketManager.getHealthStatus();
+  
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    dataDirectory: process.env.DATA_DIRECTORY || './data',
+    sockets: socketHealth
+  });
+});
+
 // Security middleware - Comprehensive Protection Stack
 // Added 2025-01-13 21:58:15 UTC - Upgraded to comprehensive security protection
 app.use(securityHeaders);
@@ -252,20 +266,6 @@ app.use('/api', validateApiVersion);
 
 // Apply general rate limiting to all API routes
 app.use('/api', apiLimiter);
-
-// Health check endpoint (no rate limiting)
-app.get('/api/health', (req, res) => {
-  console.log('🏥 Health check requested');
-  const socketHealth = socketManager.getHealthStatus();
-  
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    dataDirectory: process.env.DATA_DIRECTORY || './data',
-    sockets: socketHealth
-  });
-});
 
 // Socket health endpoint
 app.get('/api/socket/health', (req, res) => {
