@@ -8,7 +8,8 @@
     "start": "tsx watch scripts/dev.ts",
     "test:env": "tsx scripts/test-env.ts",
     "deployment:check": "tsx scripts/deployment-check.js",
-    "deployment:test": "npx tsx scripts/test-deployment-validation.ts"
+    "deployment:test": "npx tsx scripts/test-deployment-validation.ts",
+    "domain:check": "tsx scripts/domain-check.ts"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.10",
