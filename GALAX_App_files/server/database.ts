@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
-import { Kysely, SqliteDialect } from 'kysely';
+import { Kysely, SqliteDialect, PostgresDialect } from 'kysely';
+import { Pool } from 'pg';
 import path from 'path';
 import fs from 'fs';
 import { diagnoseDatabaseFile, createInitialDatabase } from './database-diagnostics.js';
@@ -236,13 +237,20 @@ export interface DatabaseSchema {
   };
 }
 
+// Database configuration - supports both PostgreSQL and SQLite
+const DATABASE_URL = process.env.DATABASE_URL;
 const dataDirectory = process.env.DATA_DIRECTORY || './data';
 const databasePath = path.join(dataDirectory, 'database.sqlite');
 
 console.log('🗄️ Database initialization...');
-console.log('📁 Data directory:', dataDirectory);
-console.log('📊 Database path:', databasePath);
-console.log('🔍 Absolute database path:', path.resolve(databasePath));
+if (DATABASE_URL) {
+  console.log('📊 Using PostgreSQL from DATABASE_URL');
+  console.log('🔗 Database URL configured:', DATABASE_URL.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
+} else {
+  console.log('📁 Data directory:', dataDirectory);
+  console.log('📊 Database path:', databasePath);
+  console.log('🔍 Absolute database path:', path.resolve(databasePath));
+}
 
 /**
  * Validates that a string is a safe SQL identifier (table name, column name, etc.)
@@ -358,7 +366,13 @@ async function safeAddColumn(db: Database.Database, tableName: string, columnNam
 
 async function initializeDatabase() {
   try {
-    // Run diagnostics first
+    // Skip SQLite-specific initialization if using PostgreSQL
+    if (DATABASE_URL) {
+      console.log('✅ PostgreSQL database connection configured via DATABASE_URL');
+      return; // PostgreSQL databases are typically pre-created and managed externally
+    }
+    
+    // Run diagnostics first (SQLite only)
     const diagnostics = await diagnoseDatabaseFile();
     
     if (!diagnostics.exists) {
@@ -558,63 +572,191 @@ if (!fs.existsSync(uploadsDirectory)) {
   fs.mkdirSync(uploadsDirectory, { recursive: true });
 }
 
-let sqliteDb: Database.Database;
-try {
-  console.log('🔌 Connecting to SQLite database...');
-  sqliteDb = new Database(databasePath);
-  console.log('✅ SQLite database connection established');
-  
-  // Enable foreign keys
-  sqliteDb.pragma('foreign_keys = ON');
-  
-  // Set journal mode to WAL for better performance
-  sqliteDb.pragma('journal_mode = WAL');
-  
-  // Performance optimizations - Added 2025-01-11 for urgent performance fixes
-  sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
-  sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
-  sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
-  sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
-  
-  // Test the connection
-  const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
-  console.log('🧪 Database test query result:', result);
-  
-  // Verify tables exist
-  const tables = sqliteDb.prepare(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name NOT LIKE 'sqlite_%'
-  `).all();
-  
-  console.log('📋 Database tables found:', tables.length);
-  tables.forEach((table: any) => {
-    console.log('  ✅', table.name);
-  });
-  
-  if (tables.length === 0) {
-    throw new Error('No tables found in database');
+// Database initialization and connection setup
+let db: Kysely<DatabaseSchema>;
+
+async function initializeDatabaseConnection(): Promise<Kysely<DatabaseSchema>> {
+  if (DATABASE_URL) {
+    // PostgreSQL configuration
+    console.log('🔌 Connecting to PostgreSQL database...');
+    
+    try {
+      const pool = new Pool({
+        connectionString: DATABASE_URL,
+        ssl: DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+      });
+      
+      // Test the connection
+      const client = await pool.connect();
+      const result = await client.query('SELECT version()');
+      console.log('✅ PostgreSQL connection established');
+      console.log('🧪 Database version:', result.rows[0].version);
+      client.release();
+      
+      return new Kysely<DatabaseSchema>({
+        dialect: new PostgresDialect({
+          pool,
+        }),
+        log: (event) => {
+          if (event.level === 'query') {
+            console.log('🔍 Query:', event.query.sql);
+            console.log('📊 Parameters:', event.query.parameters);
+          }
+          if (event.level === 'error') {
+            console.error('❌ Database error:', event.error);
+          }
+        }
+      });
+      
+    } catch (error) {
+      console.error('❌ Failed to connect to PostgreSQL database:', error);
+      console.error('🔍 DATABASE_URL provided but connection failed');
+      throw error;
+    }
+    
+  } else {
+    // SQLite configuration (fallback)
+    console.log('🔌 Using SQLite database (no DATABASE_URL provided)...');
+    
+    let sqliteDb: Database.Database;
+    try {
+      console.log('🔌 Connecting to SQLite database...');
+      sqliteDb = new Database(databasePath);
+      console.log('✅ SQLite database connection established');
+      
+      // Enable foreign keys
+      sqliteDb.pragma('foreign_keys = ON');
+      
+      // Set journal mode to WAL for better performance
+      sqliteDb.pragma('journal_mode = WAL');
+      
+      // Performance optimizations - Added 2025-01-11 for urgent performance fixes
+      sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
+      sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
+      sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
+      sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
+      
+      // Test the connection
+      const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
+      console.log('🧪 Database test query result:', result);
+      
+      // Verify tables exist
+      const tables = sqliteDb.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name NOT LIKE 'sqlite_%'
+      `).all();
+      
+      console.log('📋 Database tables found:', tables.length);
+      tables.forEach((table: any) => {
+        console.log('  ✅', table.name);
+      });
+      
+      if (tables.length === 0) {
+        throw new Error('No tables found in database');
+      }
+      
+    } catch (error) {
+      console.error('❌ Failed to initialize SQLite database:', error);
+      console.error('🔍 Database path that failed:', databasePath);
+      throw error;
+    }
+
+    return new Kysely<DatabaseSchema>({
+      dialect: new SqliteDialect({
+        database: sqliteDb,
+      }),
+      log: (event) => {
+        if (event.level === 'query') {
+          console.log('🔍 Query:', event.query.sql);
+          console.log('📊 Parameters:', event.query.parameters);
+        }
+        if (event.level === 'error') {
+          console.error('❌ Database error:', event.error);
+        }
+      }
+    });
   }
-  
-} catch (error) {
-  console.error('❌ Failed to initialize SQLite database:', error);
-  console.error('🔍 Database path that failed:', databasePath);
-  throw error;
 }
 
-export const db = new Kysely<DatabaseSchema>({
-  dialect: new SqliteDialect({
-    database: sqliteDb,
-  }),
-  log: (event) => {
-    if (event.level === 'query') {
-      console.log('🔍 Query:', event.query.sql);
-      console.log('📊 Parameters:', event.query.parameters);
+// Initialize database connection for SQLite immediately, defer for PostgreSQL
+if (DATABASE_URL) {
+  // For PostgreSQL, create a promise that resolves to the database
+  const dbPromise = initializeDatabaseConnection();
+  db = new Proxy({} as Kysely<DatabaseSchema>, {
+    get(target, prop) {
+      if (typeof prop === 'string' && ['selectFrom', 'insertInto', 'updateTable', 'deleteFrom', 'schema', 'fn', 'transaction'].includes(prop)) {
+        return async (...args: any[]) => {
+          const realDb = await dbPromise;
+          return (realDb as any)[prop](...args);
+        };
+      }
+      return async (...args: any[]) => {
+        const realDb = await dbPromise;
+        return (realDb as any)[prop](...args);
+      };
     }
-    if (event.level === 'error') {
-      console.error('❌ Database error:', event.error);
+  });
+} else {
+  // For SQLite, initialize synchronously
+  try {
+    console.log('🔌 Connecting to SQLite database...');
+    const sqliteDb = new Database(databasePath);
+    console.log('✅ SQLite database connection established');
+    
+    // Enable foreign keys
+    sqliteDb.pragma('foreign_keys = ON');
+    
+    // Set journal mode to WAL for better performance
+    sqliteDb.pragma('journal_mode = WAL');
+    
+    // Performance optimizations - Added 2025-01-11 for urgent performance fixes
+    sqliteDb.pragma('cache_size = 10000');  // Increase cache size for better performance
+    sqliteDb.pragma('temp_store = memory');  // Store temporary tables in memory
+    sqliteDb.pragma('mmap_size = 268435456'); // Enable memory mapping (256MB)
+    sqliteDb.pragma('synchronous = NORMAL');  // Balance between safety and performance
+    
+    // Test the connection
+    const result = sqliteDb.prepare('SELECT sqlite_version() as version').get();
+    console.log('🧪 Database test query result:', result);
+    
+    // Verify tables exist
+    const tables = sqliteDb.prepare(`
+      SELECT name FROM sqlite_master 
+      WHERE type='table' AND name NOT LIKE 'sqlite_%'
+    `).all();
+    
+    console.log('📋 Database tables found:', tables.length);
+    tables.forEach((table: any) => {
+      console.log('  ✅', table.name);
+    });
+    
+    if (tables.length === 0) {
+      throw new Error('No tables found in database');
     }
+    
+    db = new Kysely<DatabaseSchema>({
+      dialect: new SqliteDialect({
+        database: sqliteDb,
+      }),
+      log: (event) => {
+        if (event.level === 'query') {
+          console.log('🔍 Query:', event.query.sql);
+          console.log('📊 Parameters:', event.query.parameters);
+        }
+        if (event.level === 'error') {
+          console.error('❌ Database error:', event.error);
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Failed to initialize SQLite database:', error);
+    console.error('🔍 Database path that failed:', databasePath);
+    throw error;
   }
-});
+}
+
+export { db };
 
 // Test database connection
 async function testDatabaseConnection() {

@@ -212,14 +212,15 @@ export const corsConfig = {
         'https://app.galax-network.org'
       ] : []),
       
-      // Environment-specific origins
-      process.env.FRONTEND_URL,
+      // Primary environment-specific origins
+      process.env.CLIENT_ORIGIN,           // Primary CORS origin (new)
+      process.env.FRONTEND_URL,            // Legacy support
       process.env.PRODUCTION_FRONTEND_URL,
       process.env.STAGING_FRONTEND_URL,
       
       // Additional trusted origins from environment
       ...(process.env.TRUSTED_ORIGINS ? process.env.TRUSTED_ORIGINS.split(',') : [])
-    ].filter(Boolean);
+    ].filter(Boolean); // Remove undefined/null values
 
     // Security: In production, be more strict about origins
     if (isProduction && !origin) {
@@ -242,6 +243,11 @@ export const corsConfig = {
     } else {
       console.warn(`🚨 CORS blocked origin: ${origin}`, {
         allowedOrigins: allowedOrigins.length,
+        configuredOrigins: {
+          CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+          FRONTEND_URL: process.env.FRONTEND_URL,
+          TRUSTED_ORIGINS: process.env.TRUSTED_ORIGINS
+        },
         isProduction,
         timestamp: new Date().toISOString()
       });
