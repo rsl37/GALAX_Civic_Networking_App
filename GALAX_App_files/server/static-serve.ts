@@ -18,10 +18,23 @@ export function setupStaticServing(app: express.Application) {
   app.use(express.static(publicDir));
   
   // Handle client-side routing - serve index.html for all non-API routes
-  app.get('*', (req, res) => {
+  // Use a more specific pattern to avoid path-to-regexp issues
+  app.get('/', (req, res) => {
+    const indexPath = path.join(publicDir, 'index.html');
+    
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error('❌ index.html not found at:', indexPath);
+      res.status(404).send('Application not built. Please run build command.');
+    }
+  });
+  
+  // Handle all other routes that don't start with /api/
+  app.use((req, res, next) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ error: 'API endpoint not found' });
+      return next();
     }
     
     const indexPath = path.join(publicDir, 'index.html');
