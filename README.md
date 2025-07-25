@@ -168,6 +168,21 @@ For production licensing and terms, see `LICENSE` (to be added).
 
 ---
 
+## 🚀 Deployment & Domain Configuration
+
+### Custom Domain SSL Setup
+If you're experiencing SSL errors with the custom domain, refer to our comprehensive guide:
+
+- **[Vercel Domain Setup Guide](GALAX_App_files/docs/VERCEL_DOMAIN_SETUP.md)** - Complete SSL and domain configuration for Vercel
+
+### Common SSL Issues
+The `ERR_SSL_PROTOCOL_ERROR` on custom domains is typically caused by:
+- Incomplete domain verification in Vercel
+- DNS records not properly configured
+- SSL certificate still being issued
+
+See the domain setup guide for step-by-step resolution.
+
 ## 🔒 Network & Firewall Configuration
 
 This repository requires access to various external services for proper operation. If you are experiencing connectivity issues behind a corporate firewall or restrictive network, please refer to our comprehensive firewall documentation:
