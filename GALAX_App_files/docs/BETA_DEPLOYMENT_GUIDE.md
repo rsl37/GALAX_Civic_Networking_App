@@ -74,8 +74,10 @@ Checks Summary:
 You can also check deployment readiness via API:
 
 ```bash
-# Check via API endpoint
+# Check via API endpoint (use your deployed domain)
 curl https://galaxcivicnetwork.me/api/deployment/ready
+# OR for Vercel deployment:
+# curl https://galax-civic-networking.vercel.app/api/deployment/ready
 
 # Response includes detailed validation report
 {
@@ -134,6 +136,7 @@ SMTP_FROM=GALAX Support <noreply@galaxcivicnetwork.me>
 # <!-- Added 2025-07-18 21:40:07: For production, recommend using a transactional email provider (SendGrid, Mailgun, SES) instead of Gmail SMTP for reliability and compliance. -->
 
 # Frontend URL (for password reset emails)
+# Use your primary domain - both domains are supported
 FRONTEND_URL=https://galaxcivicnetwork.me
 ```
 

@@ -205,8 +205,9 @@ export const corsConfig = {
         'http://127.0.0.1:5173'
       ] : []),
       
-      // Production origins
+      // Production origins - Supporting both domains
       ...(isProduction ? [
+        'https://galax-civic-networking.vercel.app',
         'https://galaxcivicnetwork.me',
         'https://www.galaxcivicnetwork.me',
         'https://staging.galaxcivicnetwork.me'
