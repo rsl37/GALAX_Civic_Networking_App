@@ -158,12 +158,12 @@ Example .env file:
   PORT=3001
   DATA_DIRECTORY=/opt/galax/data
   JWT_SECRET=your-super-secure-jwt-secret-key-here
-  FRONTEND_URL=https://yourdomain.com
+  FRONTEND_URL=https://galaxcivicnetwork.me
   SMTP_HOST=smtp.gmail.com
   SMTP_PORT=587
   SMTP_USER=your-email@gmail.com
   SMTP_PASS=your-app-password
-  SMTP_FROM=GALAX Support <noreply@yourdomain.com>
+  SMTP_FROM=GALAX Support <noreply@galaxcivicnetwork.me>
 
 For more information, see the deployment guide:
   docs/BETA_DEPLOYMENT_GUIDE.md

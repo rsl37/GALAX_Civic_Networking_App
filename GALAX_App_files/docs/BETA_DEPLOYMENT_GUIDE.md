@@ -75,7 +75,7 @@ You can also check deployment readiness via API:
 
 ```bash
 # Check via API endpoint
-curl https://yourdomain.com/api/deployment/ready
+curl https://galaxcivicnetwork.me/api/deployment/ready
 
 # Response includes detailed validation report
 {
@@ -130,11 +130,11 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
-SMTP_FROM=GALAX Support <noreply@yourdomain.com>
+SMTP_FROM=GALAX Support <noreply@galaxcivicnetwork.me>
 # <!-- Added 2025-07-18 21:40:07: For production, recommend using a transactional email provider (SendGrid, Mailgun, SES) instead of Gmail SMTP for reliability and compliance. -->
 
 # Frontend URL (for password reset emails)
-FRONTEND_URL=https://yourdomain.com
+FRONTEND_URL=https://galaxcivicnetwork.me
 ```
 
 ## 🏗️ Deployment Steps
@@ -211,13 +211,13 @@ pm2 startup
 ```nginx
 server {
     listen 80;
-    server_name yourdomain.com;
+    server_name galaxcivicnetwork.me;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name yourdomain.com;
+    server_name galaxcivicnetwork.me;
 
     ssl_certificate /path/to/ssl/cert.pem;
     ssl_certificate_key /path/to/ssl/key.pem;
@@ -283,13 +283,13 @@ server {
 ### Application Health
 ```bash
 # Check if application is running
-curl https://yourdomain.com/api/health
+curl https://galaxcivicnetwork.me/api/health
 
 # Check database connection
-curl https://yourdomain.com/api/test-db
+curl https://galaxcivicnetwork.me/api/test-db
 
 # Check deployment readiness
-curl https://yourdomain.com/api/deployment/ready
+curl https://galaxcivicnetwork.me/api/deployment/ready
 
 # Check PM2 status
 pm2 status

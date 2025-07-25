@@ -69,7 +69,7 @@ NODE_ENV=production
 PORT=3001
 DATA_DIRECTORY=/opt/galax/data
 JWT_SECRET=your-64-character-secret-here
-FRONTEND_URL=https://yourdomain.com
+FRONTEND_URL=https://galaxcivicnetwork.me
 EOF
 ```
 

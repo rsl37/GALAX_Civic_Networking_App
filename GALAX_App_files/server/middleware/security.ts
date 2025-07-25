@@ -207,9 +207,9 @@ export const corsConfig = {
       
       // Production origins
       ...(isProduction ? [
-        'https://galax-app.com',
-        'https://www.galax-app.com',
-        'https://app.galax-network.org'
+        'https://galaxcivicnetwork.me',
+        'https://www.galaxcivicnetwork.me',
+        'https://staging.galaxcivicnetwork.me'
       ] : []),
       
       // Primary environment-specific origins
