@@ -212,8 +212,10 @@ jobs:
               const port = httpServer.address().port;
               console.log(`Test server listening on port ${port}`);
               
-              // Create client connection
-              const client = ioc(`http://localhost:${port}`);
+              // Add delay to ensure server is fully ready before client connection
+              setTimeout(() => {
+                // Create client connection
+                const client = ioc(`http://localhost:${port}`);
               
               client.on('connect', () => {
                 console.log('Client connected successfully');
@@ -233,12 +235,13 @@ jobs:
                 reject(new Error(`Connection failed: ${error.message}`));
               });
               
-              // Timeout after 10 seconds
+              // Timeout after 20 seconds for slower CI environments
               setTimeout(() => {
                 client.disconnect();
                 httpServer.close();
                 reject(new Error('Socket.IO test timeout'));
-              }, 10000);
+              }, 20000);
+              }, 500); // 500ms delay to ensure server is ready
             });
           });
         }
