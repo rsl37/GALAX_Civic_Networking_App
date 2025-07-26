@@ -1,69 +1,23 @@
 /**
- * Stablecoin Contract Tests
- * Unit tests for the algorithmic stablecoin smart contract logic
+ * Vitest Tests for Stablecoin Contract
+ * Converted from custom test runner to standard vitest format
  */
 
+import { describe, test, expect } from 'vitest';
 import { StablecoinContract, StablecoinConfig, DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
 
-// Simple test framework
-interface TestResult {
-  name: string;
-  passed: boolean;
-  error?: string;
-}
-
-class TestRunner {
-  private results: TestResult[] = [];
-
-  test(name: string, fn: () => void | Promise<void>) {
-    return new Promise<void>(async (resolve) => {
-      try {
-        await fn();
-        this.results.push({ name, passed: true });
-        console.log(`✅ ${name}`);
-      } catch (error) {
-        this.results.push({ 
-          name, 
-          passed: false, 
-          error: error instanceof Error ? error.message : String(error) 
-        });
-        console.log(`❌ ${name}: ${error}`);
-      }
-      resolve();
-    });
-  }
-
-  async runAll(): Promise<void> {
-    console.log('Running stablecoin contract tests...\n');
-    
-    await this.testBasicFunctionality();
-    await this.testSupplyAdjustments();
-    await this.testPriceStability();
-    await this.testReserveManagement();
-    await this.testEdgeCases();
-    
-    this.printSummary();
-  }
-
-  private async testBasicFunctionality() {
-    console.log('📋 Testing basic functionality...');
-
-    await this.test('Contract initialization', () => {
+describe('StablecoinContract', () => {
+  describe('Basic Functionality', () => {
+    test('should initialize contract correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 2000);
       const supplyInfo = contract.getSupplyInfo();
       
-      if (supplyInfo.totalSupply !== 10000) {
-        throw new Error(`Expected supply 10000, got ${supplyInfo.totalSupply}`);
-      }
-      if (supplyInfo.reservePool !== 2000) {
-        throw new Error(`Expected reserve 2000, got ${supplyInfo.reservePool}`);
-      }
-      if (supplyInfo.reserveRatio !== 0.2) {
-        throw new Error(`Expected reserve ratio 0.2, got ${supplyInfo.reserveRatio}`);
-      }
+      expect(supplyInfo.totalSupply).toBe(10000);
+      expect(supplyInfo.reservePool).toBe(2000);
+      expect(supplyInfo.reserveRatio).toBe(0.2);
     });
 
-    await this.test('Price data handling', () => {
+    test('should handle price data correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG);
       
       contract.addPriceData({
@@ -74,12 +28,10 @@ class TestRunner {
       });
       
       const currentPrice = contract.getCurrentPrice();
-      if (currentPrice !== 1.05) {
-        throw new Error(`Expected price 1.05, got ${currentPrice}`);
-      }
+      expect(currentPrice).toBe(1.05);
     });
 
-    await this.test('Average price calculation', () => {
+    test('should calculate average price correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG);
       const now = Date.now();
       
@@ -92,16 +44,12 @@ class TestRunner {
       const avgPrice = contract.getAveragePrice(400000);
       const expected = (1.0 + 1.1 + 0.9 + 1.05) / 4;
       
-      if (Math.abs(avgPrice - expected) > 0.01) {
-        throw new Error(`Expected average price ${expected}, got ${avgPrice}`);
-      }
+      expect(Math.abs(avgPrice - expected)).toBeLessThan(0.01);
     });
-  }
+  });
 
-  private async testSupplyAdjustments() {
-    console.log('📊 Testing supply adjustments...');
-
-    await this.test('Expansion when price above peg', () => {
+  describe('Supply Adjustments', () => {
+    test('should expand when price is above peg', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         toleranceBand: 0.01 // 1% tolerance
@@ -119,15 +67,11 @@ class TestRunner {
       
       const adjustment = contract.calculateSupplyAdjustment();
       
-      if (adjustment.action !== 'expand') {
-        throw new Error(`Expected expand action, got ${adjustment.action}`);
-      }
-      if (adjustment.amount <= 0) {
-        throw new Error(`Expected positive expansion amount, got ${adjustment.amount}`);
-      }
+      expect(adjustment.action).toBe('expand');
+      expect(adjustment.amount).toBeGreaterThan(0);
     });
 
-    await this.test('Contraction when price below peg', () => {
+    test('should contract when price is below peg', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         toleranceBand: 0.01 // 1% tolerance
@@ -145,15 +89,11 @@ class TestRunner {
       
       const adjustment = contract.calculateSupplyAdjustment();
       
-      if (adjustment.action !== 'contract') {
-        throw new Error(`Expected contract action, got ${adjustment.action}`);
-      }
-      if (adjustment.amount <= 0) {
-        throw new Error(`Expected positive contraction amount, got ${adjustment.amount}`);
-      }
+      expect(adjustment.action).toBe('contract');
+      expect(adjustment.amount).toBeGreaterThan(0);
     });
 
-    await this.test('No action when price within tolerance', () => {
+    test('should take no action when price is within tolerance', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         toleranceBand: 0.05 // 5% tolerance
@@ -171,12 +111,10 @@ class TestRunner {
       
       const adjustment = contract.calculateSupplyAdjustment();
       
-      if (adjustment.action !== 'none') {
-        throw new Error(`Expected no action, got ${adjustment.action}`);
-      }
+      expect(adjustment.action).toBe('none');
     });
 
-    await this.test('Supply adjustment execution', () => {
+    test('should execute supply adjustments correctly', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         rebalanceInterval: 0 // Allow immediate rebalancing for testing
@@ -195,22 +133,19 @@ class TestRunner {
       
       const adjustment = contract.rebalance();
       
-      if (!adjustment || adjustment.action === 'none') {
-        throw new Error('Expected rebalance to execute');
-      }
+      expect(adjustment).toBeTruthy();
+      expect(adjustment?.action).not.toBe('none');
       
       const newSupply = contract.getSupplyInfo().totalSupply;
       
-      if (adjustment.action === 'expand' && newSupply <= initialSupply) {
-        throw new Error('Expected supply to increase after expansion');
+      if (adjustment?.action === 'expand') {
+        expect(newSupply).toBeGreaterThan(initialSupply);
       }
     });
-  }
+  });
 
-  private async testPriceStability() {
-    console.log('💹 Testing price stability metrics...');
-
-    await this.test('Stability metrics calculation', () => {
+  describe('Price Stability', () => {
+    test('should calculate stability metrics correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG);
       
       // Add stable price data
@@ -226,18 +161,12 @@ class TestRunner {
       
       const metrics = contract.getStabilityMetrics();
       
-      if (metrics.targetPrice !== 1.0) {
-        throw new Error(`Expected target price 1.0, got ${metrics.targetPrice}`);
-      }
-      if (metrics.deviation > 0.1) {
-        throw new Error(`Expected low deviation, got ${metrics.deviation}`);
-      }
-      if (metrics.stabilityScore < 50) {
-        throw new Error(`Expected decent stability score, got ${metrics.stabilityScore}`);
-      }
+      expect(metrics.targetPrice).toBe(1.0);
+      expect(metrics.deviation).toBeLessThan(0.1);
+      expect(metrics.stabilityScore).toBeGreaterThan(50);
     });
 
-    await this.test('High volatility detection', () => {
+    test('should detect high volatility', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG);
       
       // Add volatile price data
@@ -255,46 +184,34 @@ class TestRunner {
       
       const metrics = contract.getStabilityMetrics();
       
-      if (metrics.volatility < 0.1) {
-        throw new Error(`Expected high volatility, got ${metrics.volatility}`);
-      }
-      if (metrics.stabilityScore > 80) {
-        throw new Error(`Expected low stability score for volatile prices, got ${metrics.stabilityScore}`);
-      }
+      expect(metrics.volatility).toBeGreaterThan(0.1);
+      expect(metrics.stabilityScore).toBeLessThan(80);
     });
-  }
+  });
 
-  private async testReserveManagement() {
-    console.log('🏦 Testing reserve management...');
-
-    await this.test('Adding reserves', () => {
+  describe('Reserve Management', () => {
+    test('should add reserves correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 2000);
       const initialReserves = contract.getSupplyInfo().reservePool;
       
       contract.addReserves(500);
       
       const newReserves = contract.getSupplyInfo().reservePool;
-      if (newReserves !== initialReserves + 500) {
-        throw new Error(`Expected reserves to increase by 500, got ${newReserves - initialReserves}`);
-      }
+      expect(newReserves).toBe(initialReserves + 500);
     });
 
-    await this.test('Removing reserves with sufficient backing', () => {
+    test('should remove reserves when sufficient backing exists', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 5000); // 50% reserve ratio
       
       const success = contract.removeReserves(1000);
       
-      if (!success) {
-        throw new Error('Expected reserve removal to succeed with sufficient backing');
-      }
+      expect(success).toBe(true);
       
       const newReserves = contract.getSupplyInfo().reservePool;
-      if (newReserves !== 4000) {
-        throw new Error(`Expected 4000 reserves after removal, got ${newReserves}`);
-      }
+      expect(newReserves).toBe(4000);
     });
 
-    await this.test('Preventing reserve removal that violates ratio', () => {
+    test('should prevent reserve removal that violates ratio', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         reserveRatio: 0.3 // 30% minimum reserve ratio
@@ -304,12 +221,10 @@ class TestRunner {
       
       const success = contract.removeReserves(100); // Would drop below minimum
       
-      if (success) {
-        throw new Error('Expected reserve removal to fail when it would violate reserve ratio');
-      }
+      expect(success).toBe(false);
     });
 
-    await this.test('Reserve ratio constraint on contractions', () => {
+    test('should respect reserve ratio constraints on contractions', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         reserveRatio: 0.25, // 25% minimum
@@ -330,28 +245,22 @@ class TestRunner {
       
       // Should limit contraction to maintain reserve ratio
       const wouldViolateRatio = (2500 / adjustment.newSupply) < 0.25;
-      if (wouldViolateRatio) {
-        throw new Error('Contraction calculation should respect reserve ratio constraints');
-      }
+      expect(wouldViolateRatio).toBe(false);
     });
-  }
+  });
 
-  private async testEdgeCases() {
-    console.log('🔍 Testing edge cases...');
-
-    await this.test('Zero supply handling', () => {
+  describe('Edge Cases', () => {
+    test('should handle zero supply gracefully', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 0, 0);
       const supplyInfo = contract.getSupplyInfo();
       
-      if (supplyInfo.reserveRatio !== 0) {
-        throw new Error(`Expected 0 reserve ratio with zero supply, got ${supplyInfo.reserveRatio}`);
-      }
+      expect(supplyInfo.reserveRatio).toBe(0);
       
-      const adjustment = contract.calculateSupplyAdjustment();
       // Should handle gracefully without errors
+      expect(() => contract.calculateSupplyAdjustment()).not.toThrow();
     });
 
-    await this.test('Maximum supply change limit', () => {
+    test('should respect maximum supply change limit', () => {
       const config: StablecoinConfig = {
         ...DEFAULT_STABLECOIN_CONFIG,
         maxSupplyChange: 0.05, // 5% max change
@@ -372,41 +281,31 @@ class TestRunner {
       
       if (adjustment.action === 'expand') {
         const maxExpansion = 10000 * 0.05;
-        if (adjustment.amount > maxExpansion + 1) { // Small tolerance for rounding
-          throw new Error(`Supply change ${adjustment.amount} exceeds maximum ${maxExpansion}`);
-        }
+        expect(adjustment.amount).toBeLessThanOrEqual(maxExpansion + 1); // Small tolerance for rounding
       }
     });
 
-    await this.test('Mint and burn operations', () => {
+    test('should handle mint and burn operations correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG, 10000, 2000);
       
       // Test minting
       contract.mint(1000);
       let supplyInfo = contract.getSupplyInfo();
-      if (supplyInfo.totalSupply !== 11000) {
-        throw new Error(`Expected supply 11000 after mint, got ${supplyInfo.totalSupply}`);
-      }
+      expect(supplyInfo.totalSupply).toBe(11000);
       
       // Test burning
       const burnSuccess = contract.burn(2000);
-      if (!burnSuccess) {
-        throw new Error('Expected burn to succeed');
-      }
+      expect(burnSuccess).toBe(true);
       
       supplyInfo = contract.getSupplyInfo();
-      if (supplyInfo.totalSupply !== 9000) {
-        throw new Error(`Expected supply 9000 after burn, got ${supplyInfo.totalSupply}`);
-      }
+      expect(supplyInfo.totalSupply).toBe(9000);
       
       // Test burning more than supply
       const excessiveBurn = contract.burn(15000);
-      if (excessiveBurn) {
-        throw new Error('Expected excessive burn to fail');
-      }
+      expect(excessiveBurn).toBe(false);
     });
 
-    await this.test('Configuration updates', () => {
+    test('should update configuration correctly', () => {
       const contract = new StablecoinContract(DEFAULT_STABLECOIN_CONFIG);
       
       const newConfig = {
@@ -417,38 +316,8 @@ class TestRunner {
       contract.updateConfig(newConfig);
       
       const updatedConfig = contract.getConfig();
-      if (updatedConfig.targetPrice !== 2.0) {
-        throw new Error(`Expected updated target price 2.0, got ${updatedConfig.targetPrice}`);
-      }
-      if (updatedConfig.toleranceBand !== 0.1) {
-        throw new Error(`Expected updated tolerance 0.1, got ${updatedConfig.toleranceBand}`);
-      }
+      expect(updatedConfig.targetPrice).toBe(2.0);
+      expect(updatedConfig.toleranceBand).toBe(0.1);
     });
-  }
-
-  private printSummary() {
-    const passed = this.results.filter(r => r.passed).length;
-    const total = this.results.length;
-    const failed = this.results.filter(r => !r.passed);
-    
-    console.log(`\n📊 Test Summary: ${passed}/${total} tests passed`);
-    
-    if (failed.length > 0) {
-      console.log('\n❌ Failed tests:');
-      failed.forEach(test => {
-        console.log(`   • ${test.name}: ${test.error}`);
-      });
-    }
-    
-    console.log(passed === total ? '\n🎉 All tests passed!' : '\n⚠️ Some tests failed');
-  }
-}
-
-// Export test runner for external use
-export { TestRunner };
-
-// Run tests if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const runner = new TestRunner();
-  runner.runAll().catch(console.error);
-}
+  });
+});
