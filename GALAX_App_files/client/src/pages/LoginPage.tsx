@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Wallet, Mail, Phone, Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CountryCodeSelector } from '@/components/CountryCodeSelector';
+import { Country } from '@/data/countries';
 
 export function LoginPage() {
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +28,8 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const identifier = loginMethod === 'email' ? email : phone;
+      // Format phone number with country code if it's a phone login
+      const identifier = loginMethod === 'email' ? email : `${countryCode}${phone.replace(/^[\+\s0]+/, '')}`;
       await login(identifier, password);
       navigate('/dashboard');
     } catch (err) {
@@ -111,21 +115,34 @@ export function LoginPage() {
                 <Label htmlFor="identifier">
                   {loginMethod === 'email' ? 'Email' : 'Phone Number'}
                 </Label>
-                <Input
-                  id="identifier"
-                  type={loginMethod === 'email' ? 'email' : 'tel'}
-                  placeholder={loginMethod === 'email' ? 'Enter your email' : 'Enter your phone number'}
-                  value={loginMethod === 'email' ? email : phone}
-                  onChange={(e) => {
-                    if (loginMethod === 'email') {
-                      setEmail(e.target.value);
-                    } else {
-                      setPhone(e.target.value);
-                    }
-                  }}
-                  className="galax-input"
-                  required
-                />
+                {loginMethod === 'phone' ? (
+                  <div className="flex gap-2">
+                    <CountryCodeSelector
+                      value={countryCode}
+                      onChange={(dialCode: string, country: Country) => setCountryCode(dialCode)}
+                      className="flex-shrink-0"
+                    />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="galax-input flex-1"
+                      required
+                    />
+                  </div>
+                ) : (
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="galax-input"
+                    required
+                  />
+                )}
               </div>
               
               <div className="space-y-2">
