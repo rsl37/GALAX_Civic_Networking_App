@@ -1,13 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import compression from 'vite-plugin-compression';
 
 export const vitePort = 3000;
 
 export default defineConfig(({ mode }) => {
+  const isProduction = mode === 'production';
+  
   return {
     plugins: [
       react(),
+      // Enable compression only for production builds
+      ...(isProduction ? [compression({
+        algorithm: 'gzip',
+        threshold: 10240,
+      })] : []),
       // Custom plugin to handle source map requests
       {
         name: 'handle-source-map-requests',
@@ -61,6 +69,8 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.join(process.cwd(), 'dist/public'),
       emptyOutDir: true,
+      minify: 'esbuild', // Enable minification
+      target: 'es2020', // Modern target for better optimization
       rollupOptions: {
         output: {
           manualChunks: {
@@ -81,12 +91,14 @@ export default defineConfig(({ mode }) => {
               '@radix-ui/react-toggle',
               '@radix-ui/react-tooltip'
             ],
+            icons: ['lucide-react'], // Separate icons chunk
             maps: ['@googlemaps/js-api-loader', 'leaflet'],
             animation: ['framer-motion']
           }
         }
       },
-      chunkSizeWarningLimit: 300 // Set more appropriate warning limit
+      chunkSizeWarningLimit: 500, // Set more appropriate warning limit
+      sourcemap: isProduction ? false : true, // Disable sourcemaps in production
     },
     clearScreen: false,
     server: {
@@ -104,13 +116,19 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // Enable source maps for development
+    // Optimize CSS
     css: {
-      devSourcemap: true,
+      devSourcemap: !isProduction,
     },
-    // Ensure source maps are properly generated
+    // Optimize build with better tree-shaking
     esbuild: {
-      sourcemap: true,
+      sourcemap: !isProduction,
+      drop: isProduction ? ['console', 'debugger'] : [],
+    },
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['react', 'react-dom'],
+      exclude: ['@googlemaps/js-api-loader'], // Lazy load maps
     },
   };
 });
