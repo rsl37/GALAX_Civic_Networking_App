@@ -71,6 +71,7 @@
     "tailwindcss-animate": "1.0.7"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -81,15 +82,20 @@
     "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "4.7.0",
     "@vitest/ui": "^3.2.4",
+    "autocannon": "^8.0.0",
     "autoprefixer": "10.4.21",
+    "clinic": "^13.0.0",
     "ignore": "7.0.5",
     "jsdom": "^26.1.0",
+    "lighthouse": "^12.8.0",
+    "lighthouse-ci": "^1.13.1",
     "postcss": "8.5.6",
     "supertest": "^7.1.4",
     "tailwindcss": "3.4.17",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",
     "vite": "^6.3.5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

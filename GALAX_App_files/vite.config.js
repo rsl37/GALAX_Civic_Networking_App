@@ -61,6 +61,32 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: path.join(process.cwd(), 'dist/public'),
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Separate vendor chunks for better caching
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+            ui: [
+              '@radix-ui/react-avatar',
+              '@radix-ui/react-checkbox', 
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-label',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-progress',
+              '@radix-ui/react-select',
+              '@radix-ui/react-slider',
+              '@radix-ui/react-slot',
+              '@radix-ui/react-switch',
+              '@radix-ui/react-toggle',
+              '@radix-ui/react-tooltip'
+            ],
+            maps: ['@googlemaps/js-api-loader', 'leaflet'],
+            animation: ['framer-motion']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 300 // Set more appropriate warning limit
     },
     clearScreen: false,
     server: {

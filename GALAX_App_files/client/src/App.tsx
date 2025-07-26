@@ -1,21 +1,33 @@
 import * as React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
-import { EmailVerificationPage } from './pages/EmailVerificationPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { HelpRequestsPage } from './pages/HelpRequestsPage';
-import { CrisisPage } from './pages/CrisisPage';
-import { GovernancePage } from './pages/GovernancePage';
-import { ProfilePage } from './pages/ProfilePage';
-import { StablecoinPage } from './pages/StablecoinPage';
 import { BottomNavigation } from './components/BottomNavigation';
 import { EmailVerificationBanner } from './components/EmailVerificationBanner';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load pages for better performance
+const LoginPage = React.lazy(() => import('./pages/LoginPage').then(module => ({ default: module.LoginPage })));
+const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(module => ({ default: module.RegisterPage })));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage').then(module => ({ default: module.ForgotPasswordPage })));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
+const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerificationPage').then(module => ({ default: module.EmailVerificationPage })));
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(module => ({ default: module.DashboardPage })));
+const HelpRequestsPage = React.lazy(() => import('./pages/HelpRequestsPage').then(module => ({ default: module.HelpRequestsPage })));
+const CrisisPage = React.lazy(() => import('./pages/CrisisPage').then(module => ({ default: module.CrisisPage })));
+const GovernancePage = React.lazy(() => import('./pages/GovernancePage').then(module => ({ default: module.GovernancePage })));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(module => ({ default: module.ProfilePage })));
+const StablecoinPage = React.lazy(() => import('./pages/StablecoinPage').then(module => ({ default: module.StablecoinPage })));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -34,44 +46,46 @@ function AppContent() {
         {user && <EmailVerificationBanner />}
         
         <div className="pb-20">
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<EmailVerificationPage />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/help" element={
-              <ProtectedRoute>
-                <HelpRequestsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/crisis" element={
-              <ProtectedRoute>
-                <CrisisPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/governance" element={
-              <ProtectedRoute>
-                <GovernancePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            } />
-            <Route path="/stablecoin" element={
-              <ProtectedRoute>
-                <StablecoinPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
-          </Routes>
+          <React.Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/help" element={
+                <ProtectedRoute>
+                  <HelpRequestsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/crisis" element={
+                <ProtectedRoute>
+                  <CrisisPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/governance" element={
+                <ProtectedRoute>
+                  <GovernancePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/stablecoin" element={
+                <ProtectedRoute>
+                  <StablecoinPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+            </Routes>
+          </React.Suspense>
         </div>
       </div>
       {user && <BottomNavigation />}
