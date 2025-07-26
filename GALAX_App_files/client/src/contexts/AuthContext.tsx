@@ -159,13 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (emailOrPhone: string, password: string) => {
-    try {
-      // Determine if it's an email or phone number
-      const isEmail = emailOrPhone.includes('@');
-      const requestBody = isEmail 
-        ? { email: emailOrPhone, password }
-        : { phone: emailOrPhone, password };
   const login = async (identifier: string, password: string) => {
     try {
       // Determine if identifier is email or phone
@@ -226,13 +219,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (emailOrPhone: string, password: string, username: string, signupMethod?: 'email' | 'phone') => {
-    try {
-      // Determine if it's an email or phone number
-      const isEmail = signupMethod === 'email' || (!signupMethod && emailOrPhone.includes('@'));
-      const requestBody = isEmail 
-        ? { email: emailOrPhone, password, username }
-        : { phone: emailOrPhone, password, username };
   const register = async (identifier: string, password: string, username: string) => {
     try {
       // Determine if identifier is email or phone

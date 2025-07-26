@@ -133,29 +133,11 @@ export const validateRegistration = [
     }
     
     if ((email || phone) && !password) {
-      throw new Error('Password is required when registering with email or phone number');
+      throw new Error('Password is required when registering with email or phone');
     }
     
     if (email && phone) {
       throw new Error('Please use either email or phone number, not both');
-  body('phone')
-    .optional()
-    .matches(/^\+?[\d\s\-\(\)]+$/)
-    .withMessage('Invalid phone number format')
-    .isLength({ min: 10, max: 20 })
-    .withMessage('Phone number must be between 10 and 20 characters')
-    .escape(), // XSS protection
-    
-  // Custom validation to ensure either email+password, phone+password, or walletAddress
-  body().custom((value, { req }) => {
-    const { email, phone, password, walletAddress } = req.body;
-    
-    if (!email && !phone && !walletAddress) {
-      throw new Error('Either email, phone number, or wallet address is required');
-    }
-    
-    if ((email || phone) && !password) {
-      throw new Error('Password is required when registering with email or phone');
     }
     
     return true;
@@ -176,7 +158,7 @@ export const validateLogin = [
     .optional()
     .isMobilePhone('any')
     .withMessage('Please provide a valid phone number')
-    .escape(), // XSS protection
+    .escape() // XSS protection
     .matches(/^\+?[\d\s\-\(\)]+$/)
     .withMessage('Invalid phone number format')
     .trim(),
@@ -196,7 +178,7 @@ export const validateLogin = [
     const { email, phone, password, walletAddress } = req.body;
     
     if (!email && !phone && !walletAddress) {
-      throw new Error('Either email, phone number, or wallet address is required');
+      throw new Error('Either email, phone, or wallet address is required');
     }
     
     if ((email || phone) && !password) {
@@ -205,13 +187,6 @@ export const validateLogin = [
     
     if (email && phone) {
       throw new Error('Please use either email or phone number, not both');
-    
-    if (!email && !phone && !walletAddress) {
-      throw new Error('Either email, phone, or wallet address is required');
-    }
-    
-    if ((email || phone) && !password) {
-      throw new Error('Password is required for email/phone login');
     }
     
     return true;

@@ -394,7 +394,6 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       return res.status(400).json({ 
         success: false,
         error: {
-          message: 'User already exists with this email, phone number, username, or wallet address',
           message: 'User already exists with this email, phone, username, or wallet address',
           statusCode: 400
         }
@@ -528,10 +527,6 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       });
     }
 
-    // If email/phone login, verify password
-    if ((email || phone) && password) {
-      if (!user.password_hash) {
-        console.log('❌ Login failed: No password hash for email/phone user');
     // If email or phone login, verify password
     if ((email || phone) && password) {
       if (!user.password_hash) {
@@ -588,7 +583,13 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
     });
   } catch (error) {
     console.error('❌ Login error:', error);
-    throw error;
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
   }
 });
 
