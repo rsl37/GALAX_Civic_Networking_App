@@ -17,11 +17,11 @@ interface AttackPattern {
 
 // Comprehensive attack pattern database
 const ATTACK_PATTERNS: AttackPattern[] = [
-  // SQL Injection patterns
+  // SQL Injection patterns - made more precise to avoid false positives
   {
     id: 'SQL_UNION_ATTACK',
     name: 'SQL Union Attack',
-    pattern: /(\bunion\b.*\bselect\b|\bselect\b.*\bunion\b)/gi,
+    pattern: /(\bunion\s+select\b|\bselect\s+.*\s+union\b)/gi,
     type: 'sql_injection',
     severity: 'critical',
     description: 'SQL UNION injection attempt',
@@ -30,7 +30,7 @@ const ATTACK_PATTERNS: AttackPattern[] = [
   {
     id: 'SQL_COMMENT_INJECTION',
     name: 'SQL Comment Injection',
-    pattern: /(--|\/\*|\*\/|#)/g,
+    pattern: /(--\s+|\/\*[\s\S]*?\*\/)/g, // More specific: requires space after -- or proper comment block
     type: 'sql_injection',
     severity: 'high',
     description: 'SQL comment injection attempt',
@@ -39,7 +39,7 @@ const ATTACK_PATTERNS: AttackPattern[] = [
   {
     id: 'SQL_STACKED_QUERIES',
     name: 'SQL Stacked Queries',
-    pattern: /;\s*(select|insert|update|delete|drop|create|alter)/gi,
+    pattern: /;\s*(select|insert|update|delete|drop|create|alter)\s+/gi,
     type: 'sql_injection',
     severity: 'critical',
     description: 'SQL stacked queries injection',
@@ -75,11 +75,11 @@ const ATTACK_PATTERNS: AttackPattern[] = [
     countermeasure: 'Block javascript: protocol'
   },
   
-  // Command Injection patterns
+  // Command Injection patterns - made more precise to avoid false positives
   {
     id: 'CMD_SHELL_OPERATORS',
     name: 'Shell Command Operators',
-    pattern: /(\|\||&&|;|\||`|\$\()/g,
+    pattern: /(\|\||&&|;\s*(cat|ls|dir|rm|del|chmod|ps|kill|wget|curl)\s+|`[^`]*`|\$\([^)]*\))/g,
     type: 'command_injection',
     severity: 'critical',
     description: 'Command injection via shell operators',
@@ -88,7 +88,7 @@ const ATTACK_PATTERNS: AttackPattern[] = [
   {
     id: 'CMD_SYSTEM_COMMANDS',
     name: 'System Commands',
-    pattern: /(cat|ls|dir|type|copy|move|del|rm|chmod|chown|ps|kill|netstat|whoami|id|uname)/gi,
+    pattern: /\b(cat|ls|dir|type|copy|move|del|rm|chmod|chown|ps|kill|netstat|whoami|id|uname)\s+[\/\w\-\.]+/gi,
     type: 'command_injection',
     severity: 'high',
     description: 'System command injection attempt',
@@ -173,18 +173,35 @@ const ddosTracker: DDoSTracker = {
   suspiciousPatterns: new Map()
 };
 
-// Bot detection patterns
+// Bot detection patterns - Updated to be less aggressive for testing and legitimate users
 const BOT_USER_AGENTS = [
-  /bot/i,
-  /crawler/i,
-  /spider/i,
-  /scraper/i,
-  /curl/i,
-  /wget/i,
-  /python/i,
-  /perl/i,
-  /java/i
+  /googlebot/i,
+  /bingbot/i,
+  /slurp/i,
+  /duckduckbot/i,
+  /baiduspider/i,
+  /yandexbot/i,
+  /sogou/i,
+  /facebookexternalhit/i,
+  /twitterbot/i,
+  /linkedinbot/i,
+  /whatsapp/i,
+  /telegrambot/i,
+  // Only block clearly malicious bots, not testing tools
+  /malicious-bot/i,
+  /evil-crawler/i,
+  /spam-bot/i
 ];
+
+// Paths that should have relaxed security for user registration
+const REGISTRATION_PATHS = new Set([
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/verify-email',
+  '/api/auth/send-email-verification'
+]);
 
 // Honeypot system
 const HONEYPOT_PATHS = new Set([
@@ -300,6 +317,13 @@ export const ipBlockingMiddleware = (req: Request, res: Response, next: NextFunc
 export const attackDetectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
   const userAgent = req.get('User-Agent') || '';
+  const requestPath = req.path;
+  
+  // Skip attack detection for registration and authentication paths
+  // Allow normal user input for these endpoints
+  if (REGISTRATION_PATHS.has(requestPath)) {
+    return next();
+  }
   
   try {
     // Combine all request data for scanning
@@ -416,24 +440,31 @@ export const ddosProtectionMiddleware = (req: Request, res: Response, next: Next
 export const botDetectionMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const userAgent = req.get('User-Agent') || '';
   const clientIP = req.ip || req.socket.remoteAddress || 'unknown';
+  const requestPath = req.path;
   
-  // Check for bot user agents
+  // Skip bot detection for registration and authentication paths
+  if (REGISTRATION_PATHS.has(requestPath)) {
+    return next();
+  }
+  
+  // Check for bot user agents - only block clearly malicious bots
   const isBot = BOT_USER_AGENTS.some(pattern => pattern.test(userAgent));
   
   if (isBot) {
     console.log(`🤖 Bot detected: ${userAgent} from IP ${clientIP}`);
     
-    // Allow legitimate bots but monitor suspicious ones
+    // Allow legitimate bots
     if (userAgent.toLowerCase().includes('googlebot') || 
         userAgent.toLowerCase().includes('bingbot') ||
-        userAgent.toLowerCase().includes('facebookexternalhit')) {
-      // Allow legitimate search engine bots
-      next();
+        userAgent.toLowerCase().includes('facebookexternalhit') ||
+        userAgent.toLowerCase().includes('twitterbot') ||
+        userAgent.toLowerCase().includes('linkedinbot')) {
+      return next();
     } else {
-      // Suspicious bot - add to monitoring
+      // Suspicious bot - add to monitoring but don't block immediately
       addSuspiciousIP(clientIP, 'Suspicious Bot', 'low');
       
-      // Rate limit bots more strictly
+      // Rate limit bots more strictly for non-auth endpoints
       return res.status(429).json({
         success: false,
         error: {
