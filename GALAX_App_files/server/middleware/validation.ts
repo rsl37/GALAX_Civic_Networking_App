@@ -99,6 +99,12 @@ export const validateRegistration = [
     .withMessage('Please provide a valid email address')
     .escape(), // XSS protection
     
+  body('phone')
+    .optional()
+    .isMobilePhone('any')
+    .withMessage('Please provide a valid phone number')
+    .escape(), // XSS protection
+    
   body('password')
     .optional()
     .isLength({ min: 6, max: 128 })
@@ -118,16 +124,20 @@ export const validateRegistration = [
     .withMessage('Invalid wallet address format')
     .escape(), // XSS protection
     
-  // Custom validation to ensure either email+password or walletAddress
+  // Custom validation to ensure either email+password, phone+password, or walletAddress
   body().custom((value, { req }) => {
-    const { email, password, walletAddress } = req.body;
+    const { email, phone, password, walletAddress } = req.body;
     
-    if (!email && !walletAddress) {
-      throw new Error('Either email or wallet address is required');
+    if (!email && !phone && !walletAddress) {
+      throw new Error('Either email, phone number, or wallet address is required');
     }
     
-    if (email && !password) {
-      throw new Error('Password is required when registering with email');
+    if ((email || phone) && !password) {
+      throw new Error('Password is required when registering with email or phone number');
+    }
+    
+    if (email && phone) {
+      throw new Error('Please use either email or phone number, not both');
     }
     
     return true;
@@ -144,10 +154,16 @@ export const validateLogin = [
     .withMessage('Email/username is required for email login')
     .trim(),
     
+  body('phone')
+    .optional()
+    .isMobilePhone('any')
+    .withMessage('Please provide a valid phone number')
+    .escape(), // XSS protection
+    
   body('password')
     .optional()
     .notEmpty()
-    .withMessage('Password is required for email login'),
+    .withMessage('Password is required for email/phone login'),
     
   body('walletAddress')
     .optional()
@@ -156,14 +172,18 @@ export const validateLogin = [
     
   // Custom validation to ensure proper login method
   body().custom((value, { req }) => {
-    const { email, password, walletAddress } = req.body;
+    const { email, phone, password, walletAddress } = req.body;
     
-    if (!email && !walletAddress) {
-      throw new Error('Either email or wallet address is required');
+    if (!email && !phone && !walletAddress) {
+      throw new Error('Either email, phone number, or wallet address is required');
     }
     
-    if (email && !password) {
-      throw new Error('Password is required for email login');
+    if ((email || phone) && !password) {
+      throw new Error('Password is required for email/phone login');
+    }
+    
+    if (email && phone) {
+      throw new Error('Please use either email or phone number, not both');
     }
     
     return true;

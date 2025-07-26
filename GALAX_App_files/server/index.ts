@@ -363,9 +363,9 @@ app.use('/api/stablecoin', stablecoinRoutes);
 // Auth endpoints with enhanced security
 app.post('/api/auth/register', authLimiter, validateRegistration, async (req, res) => {
   try {
-    const { email, password, username, walletAddress } = req.body;
+    const { email, phone, password, username, walletAddress } = req.body;
     
-    console.log('📝 Registration attempt:', { email, username, walletAddress });
+    console.log('📝 Registration attempt:', { email, phone, username, walletAddress });
 
     // Check if user already exists
     const existingUser = await db
@@ -373,6 +373,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       .selectAll()
       .where((eb) => eb.or([
         email ? eb('email', '=', email) : undefined,
+        phone ? eb('phone', '=', phone) : undefined,
         eb('username', '=', username),
         walletAddress ? eb('wallet_address', '=', walletAddress) : undefined
       ].filter(Boolean)))
@@ -383,7 +384,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       return res.status(400).json({ 
         success: false,
         error: {
-          message: 'User already exists with this email, username, or wallet address',
+          message: 'User already exists with this email, phone number, username, or wallet address',
           statusCode: 400
         }
       });
@@ -395,6 +396,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       .insertInto('users')
       .values({
         email: email || null,
+        phone: phone || null,
         password_hash: passwordHash,
         wallet_address: walletAddress || null,
         username,
@@ -405,7 +407,8 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
         roles: 'helper,requester,voter',
         skills: '[]',
         badges: '[]',
-        email_verified: 0
+        email_verified: 0,
+        phone_verified: 0
       })
       .returning('id')
       .executeTakeFirst();
@@ -441,7 +444,8 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       data: {
         token, 
         userId: user.id,
-        emailVerificationRequired: !!email
+        emailVerificationRequired: !!email,
+        phoneVerificationRequired: !!phone
       }
     });
   } catch (error) {
@@ -452,9 +456,9 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
 
 app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin, async (req, res) => {
   try {
-    const { email, password, walletAddress } = req.body;
+    const { email, phone, password, walletAddress } = req.body;
     
-    console.log('🔐 Login attempt:', { email, walletAddress });
+    console.log('🔐 Login attempt:', { email, phone, walletAddress });
 
     let user;
     if (email) {
@@ -473,6 +477,13 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
           .where('username', '=', email)
           .executeTakeFirst();
       }
+    } else if (phone) {
+      // Login with phone number
+      user = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('phone', '=', phone)
+        .executeTakeFirst();
     } else {
       // Login with wallet address
       user = await db
@@ -497,10 +508,10 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       });
     }
 
-    // If email login, verify password
-    if (email && password) {
+    // If email/phone login, verify password
+    if ((email || phone) && password) {
       if (!user.password_hash) {
-        console.log('❌ Login failed: No password hash for email user');
+        console.log('❌ Login failed: No password hash for email/phone user');
         // Record failed attempt
         if (req.lockoutKey) {
           recordFailedAttempt(req.lockoutKey);
@@ -547,7 +558,8 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       data: {
         token, 
         userId: user.id,
-        emailVerified: user.email_verified === 1
+        emailVerified: user.email_verified === 1,
+        phoneVerified: user.phone_verified === 1
       }
     });
   } catch (error) {

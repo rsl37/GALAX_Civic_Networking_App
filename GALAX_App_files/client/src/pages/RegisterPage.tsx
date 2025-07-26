@@ -27,7 +27,7 @@ export function RegisterPage() {
 
     try {
       const identifier = signupMethod === 'email' ? email : phone;
-      await register(identifier, password, username);
+      await register(identifier, password, username, signupMethod);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');

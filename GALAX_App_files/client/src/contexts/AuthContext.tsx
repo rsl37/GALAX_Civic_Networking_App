@@ -22,9 +22,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (emailOrPhone: string, password: string) => Promise<void>;
   loginWithWallet: (walletAddress: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (emailOrPhone: string, password: string, username: string, signupMethod?: 'email' | 'phone') => Promise<void>;
   registerWithWallet: (walletAddress: string, username: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -156,14 +156,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (emailOrPhone: string, password: string) => {
     try {
+      // Determine if it's an email or phone number
+      const isEmail = emailOrPhone.includes('@');
+      const requestBody = isEmail 
+        ? { email: emailOrPhone, password }
+        : { phone: emailOrPhone, password };
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(requestBody),
       });
 
       const apiData = await parseApiResponse(response);
@@ -210,14 +216,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (emailOrPhone: string, password: string, username: string, signupMethod?: 'email' | 'phone') => {
     try {
+      // Determine if it's an email or phone number
+      const isEmail = signupMethod === 'email' || (!signupMethod && emailOrPhone.includes('@'));
+      const requestBody = isEmail 
+        ? { email: emailOrPhone, password, username }
+        : { phone: emailOrPhone, password, username };
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, username }),
+        body: JSON.stringify(requestBody),
       });
 
       const apiData = await parseApiResponse(response);
