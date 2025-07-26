@@ -161,7 +161,8 @@ export const validateLogin = [
     .escape() // XSS protection
     .matches(/^\+?[\d\s\-\(\)]+$/)
     .withMessage('Invalid phone number format')
-    .trim(),
+    .trim()
+    .escape(), // XSS protection
     
   body('password')
     .optional()
