@@ -152,6 +152,23 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     } catch (error) {
       // If we can't modify req.query, skip sanitization for query params
       console.warn('⚠️ Cannot sanitize req.query (read-only property):', error.message);
+  // Note: Express req.query might be read-only. Instead of modifying it,
+  // we'll validate input and continue processing if it's safe
+  if (req.query && Object.keys(req.query).length > 0) {
+    try {
+      const sanitized = sanitizeObject(req.query);
+      // If sanitization changed anything significant, we might want to block
+      const original = JSON.stringify(req.query);
+      const sanitizedStr = JSON.stringify(sanitized);
+      if (original !== sanitizedStr) {
+        console.warn('⚠️ Query parameters required sanitization:', {
+          original: req.query,
+          sanitized: sanitized,
+          ip: req.ip
+        });
+      }
+    } catch (error) {
+      console.error('❌ Query sanitization error:', error);
     }
   }
 
@@ -162,6 +179,20 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
     } catch (error) {
       // If we can't modify req.params, skip sanitization for params
       console.warn('⚠️ Cannot sanitize req.params (read-only property):', error.message);
+  if (req.params && Object.keys(req.params).length > 0) {
+    try {
+      const sanitized = sanitizeObject(req.params);
+      const original = JSON.stringify(req.params);
+      const sanitizedStr = JSON.stringify(sanitized);
+      if (original !== sanitizedStr) {
+        console.warn('⚠️ Route parameters required sanitization:', {
+          original: req.params,
+          sanitized: sanitized,
+          ip: req.ip
+        });
+      }
+    } catch (error) {
+      console.error('❌ Route params sanitization error:', error);
     }
   }
 

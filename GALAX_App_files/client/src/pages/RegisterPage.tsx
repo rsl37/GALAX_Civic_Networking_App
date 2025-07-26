@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Wallet, Mail, Phone, Zap, Sparkles, User } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CountryCodeSelector } from '@/components/CountryCodeSelector';
+import { Country } from '@/data/countries';
 
 export function RegisterPage() {
   const [signupMethod, setSignupMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
@@ -28,6 +31,9 @@ export function RegisterPage() {
     try {
       const identifier = signupMethod === 'email' ? email : phone;
       await register(identifier, password, username, signupMethod);
+      // Format phone number with country code if it's a phone signup
+      const identifier = signupMethod === 'email' ? email : `${countryCode}${phone.replace(/^[\+\s0]+/, '')}`;
+      await register(identifier, password, username);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -130,21 +136,34 @@ export function RegisterPage() {
                 <Label htmlFor="identifier">
                   {signupMethod === 'email' ? 'Email' : 'Phone Number'}
                 </Label>
-                <Input
-                  id="identifier"
-                  type={signupMethod === 'email' ? 'email' : 'tel'}
-                  placeholder={signupMethod === 'email' ? 'Enter your email' : 'Enter your phone number'}
-                  value={signupMethod === 'email' ? email : phone}
-                  onChange={(e) => {
-                    if (signupMethod === 'email') {
-                      setEmail(e.target.value);
-                    } else {
-                      setPhone(e.target.value);
-                    }
-                  }}
-                  className="galax-input"
-                  required
-                />
+                {signupMethod === 'phone' ? (
+                  <div className="flex gap-2">
+                    <CountryCodeSelector
+                      value={countryCode}
+                      onChange={(dialCode: string, country: Country) => setCountryCode(dialCode)}
+                      className="flex-shrink-0"
+                    />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="galax-input flex-1"
+                      required
+                    />
+                  </div>
+                ) : (
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="galax-input"
+                    required
+                  />
+                )}
               </div>
               
               <div className="space-y-2">

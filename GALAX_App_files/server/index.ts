@@ -395,6 +395,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
         success: false,
         error: {
           message: 'User already exists with this email, phone number, username, or wallet address',
+          message: 'User already exists with this email, phone, username, or wallet address',
           statusCode: 400
         }
       });
@@ -440,6 +441,15 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       const verificationToken = await generateEmailVerificationToken(user.id);
       if (verificationToken) {
         await sendEmailVerification(email, verificationToken, username);
+      }
+    }
+
+    // Send phone verification if phone provided
+    if (phone) {
+      console.log('📱 Sending phone verification for new user');
+      const verificationCode = await generatePhoneVerificationToken(user.id, phone);
+      if (verificationCode) {
+        await sendPhoneVerification(phone, verificationCode);
       }
     }
 
@@ -522,6 +532,10 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
     if ((email || phone) && password) {
       if (!user.password_hash) {
         console.log('❌ Login failed: No password hash for email/phone user');
+    // If email or phone login, verify password
+    if ((email || phone) && password) {
+      if (!user.password_hash) {
+        console.log('❌ Login failed: No password hash for user');
         // Record failed attempt
         if (req.lockoutKey) {
           recordFailedAttempt(req.lockoutKey);
