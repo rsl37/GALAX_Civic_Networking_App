@@ -229,7 +229,34 @@ app.use(cors(corsConfig));
 app.use(validateIP);
 app.use(requestLogger);
 
-// Apply comprehensive security middleware stack
+// Body parsing middleware with security - MOVED BEFORE SECURITY for proper body scanning
+app.use(express.json({ 
+  limit: '1mb',  // Reduced from 10mb for better security
+  strict: true,
+  verify: (req: any, res, buf) => {
+    // Additional JSON validation
+    if (buf && buf.length) {
+      req.rawBody = buf;
+      
+      // Basic malformed JSON detection
+      try {
+        JSON.parse(buf.toString());
+      } catch (error) {
+        const err = new Error('Invalid JSON in request body');
+        (err as any).status = 400;
+        throw err;
+      }
+    }
+  }
+}));
+
+app.use(express.urlencoded({ 
+  extended: false, 
+  limit: '1mb',
+  parameterLimit: 50  // Limit number of parameters
+}));
+
+// Apply comprehensive security middleware stack AFTER body parsing
 app.use(comprehensiveSecurityMiddleware);
 
 // API versioning middleware
@@ -239,23 +266,6 @@ app.use('/api', addVersioningHeaders);
 
 // Monitoring and metrics collection
 app.use('/api', collectMetrics);
-
-// Body parsing middleware with security
-app.use(express.json({ 
-  limit: '1mb',  // Reduced from 10mb for better security
-  strict: true,
-  verify: (req: any, res, buf) => {
-    // Additional JSON validation
-    if (buf && buf.length) {
-      req.rawBody = buf;
-    }
-  }
-}));
-app.use(express.urlencoded({ 
-  extended: true, 
-  limit: '1mb',  // Reduced from 10mb for better security
-  parameterLimit: 20  // Limit number of parameters to prevent parameter pollution
-}));
 
 // Input sanitization
 app.use(sanitizeInput);
@@ -384,6 +394,7 @@ app.post('/api/auth/register', authLimiter, validateRegistration, async (req, re
       return res.status(400).json({ 
         success: false,
         error: {
+          message: 'User already exists with this email, phone number, username, or wallet address',
           message: 'User already exists with this email, phone, username, or wallet address',
           statusCode: 400
         }
@@ -517,6 +528,10 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       });
     }
 
+    // If email/phone login, verify password
+    if ((email || phone) && password) {
+      if (!user.password_hash) {
+        console.log('❌ Login failed: No password hash for email/phone user');
     // If email or phone login, verify password
     if ((email || phone) && password) {
       if (!user.password_hash) {
@@ -567,7 +582,8 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
       data: {
         token, 
         userId: user.id,
-        emailVerified: user.email_verified === 1
+        emailVerified: user.email_verified === 1,
+        phoneVerified: user.phone_verified === 1
       }
     });
   } catch (error) {

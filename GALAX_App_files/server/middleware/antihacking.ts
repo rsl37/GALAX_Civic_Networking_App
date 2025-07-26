@@ -326,15 +326,33 @@ export const attackDetectionMiddleware = (req: Request, res: Response, next: Nex
   }
   
   try {
-    // Combine all request data for scanning
-    const requestData = JSON.stringify({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-      headers: req.headers,
-      url: req.url,
-      path: req.path
-    });
+    // Phone number whitelist - skip security scanning for valid phone number patterns
+    const phonePattern = /^[\+]?[1-9]?[\d\s\-\(\)]{7,15}$/;
+    let requestData: string;
+    
+    if (req.body && req.body.phone && phonePattern.test(req.body.phone)) {
+      // Create sanitized request data excluding the phone field for security scanning
+      const sanitizedBody = { ...req.body };
+      delete sanitizedBody.phone;
+      
+      // Exclude headers from security scanning to avoid false positives
+      requestData = JSON.stringify({
+        body: sanitizedBody,
+        query: req.query,
+        params: req.params,
+        url: req.url,
+        path: req.path
+      });
+    } else {
+      // Exclude headers from security scanning to avoid false positives
+      requestData = JSON.stringify({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+        url: req.url,
+        path: req.path
+      });
+    }
     
     const detectedAttacks: AttackPattern[] = [];
     

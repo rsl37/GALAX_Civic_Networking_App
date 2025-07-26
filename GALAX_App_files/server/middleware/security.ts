@@ -140,6 +140,18 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
   }
 
   // Sanitize query parameters
+  // NOTE: Express req.query is read-only by default, but we can work around this limitation
+  // by reassigning the entire property. This is a documented pattern for security middleware
+  // that needs to modify read-only Express request properties.
+  // Alternative approaches like Object.assign(req.query, sanitizedQuery) won't work because
+  // the property descriptor prevents direct modification of individual keys.
+  if (req.query) {
+    try {
+      // Create a completely new sanitized query object and reassign the entire property
+      req.query = sanitizeObject(req.query);
+    } catch (error) {
+      // If we can't modify req.query, skip sanitization for query params
+      console.warn('⚠️ Cannot sanitize req.query (read-only property):', error.message);
   // Note: Express req.query might be read-only. Instead of modifying it,
   // we'll validate input and continue processing if it's safe
   if (req.query && Object.keys(req.query).length > 0) {
@@ -161,6 +173,12 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
   }
 
   // Sanitize route parameters
+  if (req.params) {
+    try {
+      req.params = sanitizeObject(req.params);
+    } catch (error) {
+      // If we can't modify req.params, skip sanitization for params
+      console.warn('⚠️ Cannot sanitize req.params (read-only property):', error.message);
   if (req.params && Object.keys(req.params).length > 0) {
     try {
       const sanitized = sanitizeObject(req.params);
