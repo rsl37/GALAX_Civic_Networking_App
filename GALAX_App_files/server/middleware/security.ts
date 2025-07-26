@@ -146,13 +146,23 @@ export const sanitizeInput = (req: Request, res: Response, next: NextFunction) =
   // Alternative approaches like Object.assign(req.query, sanitizedQuery) won't work because
   // the property descriptor prevents direct modification of individual keys.
   if (req.query) {
-    // Create a completely new sanitized query object and reassign the entire property
-    req.query = sanitizeObject(req.query);
+    try {
+      // Create a completely new sanitized query object and reassign the entire property
+      req.query = sanitizeObject(req.query);
+    } catch (error) {
+      // If we can't modify req.query, skip sanitization for query params
+      console.warn('⚠️ Cannot sanitize req.query (read-only property):', error.message);
+    }
   }
 
   // Sanitize route parameters
   if (req.params) {
-    req.params = sanitizeObject(req.params);
+    try {
+      req.params = sanitizeObject(req.params);
+    } catch (error) {
+      // If we can't modify req.params, skip sanitization for params
+      console.warn('⚠️ Cannot sanitize req.params (read-only property):', error.message);
+    }
   }
 
   next();
