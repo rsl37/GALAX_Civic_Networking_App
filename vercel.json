@@ -53,10 +53,5 @@
       "destination": "https://galaxcivicnetwork.me/",
       "permanent": true
     }
-  ],
-  "functions": {
-    "GALAX_App_files/dist/server/index.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
