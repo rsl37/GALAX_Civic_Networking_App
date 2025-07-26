@@ -6,6 +6,10 @@
   "scripts": {
     "build": "vite build && tsc --project tsconfig.server.json",
     "start": "tsx watch scripts/dev.ts",
+    "test": "vitest",
+    "test:api": "vitest --run tests/api",
+    "test:socket": "vitest --run tests/socket",
+    "test:watch": "vitest --watch",
     "test:env": "tsx scripts/test-env.ts",
     "deployment:check": "tsx scripts/deployment-check.js",
     "deployment:test": "npx tsx scripts/test-deployment-validation.ts",

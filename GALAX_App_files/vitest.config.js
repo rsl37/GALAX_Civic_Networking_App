@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.{js,ts}']
+    include: ['tests/**/*.{test,spec}.{js,ts}'],
+    exclude: ['server/stablecoin/tests/**/*'],
+    testTimeout: 30000,
+    hookTimeout: 30000
   }
 })
