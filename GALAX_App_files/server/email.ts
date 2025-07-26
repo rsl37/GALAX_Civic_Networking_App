@@ -65,7 +65,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
     
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'GALAX Support <noreply@galax.app>',
+      from: process.env.SMTP_FROM || 'GALAX Support <noreply@galaxcivicnetwork.me>',
       to: email,
       subject: 'Password Reset Request - GALAX',
       html: `
@@ -218,7 +218,7 @@ export async function sendEmailVerification(email: string, token: string, userna
     const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
     
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'GALAX Support <noreply@galax.app>',
+      from: process.env.SMTP_FROM || 'GALAX Support <noreply@galaxcivicnetwork.me>',
       to: email,
       subject: 'Verify Your Email - GALAX',
       html: `
@@ -271,7 +271,7 @@ export async function sendEmailVerification(email: string, token: string, userna
             <p style="color: #999; font-size: 12px; line-height: 1.5;">
               This verification link will expire in 24 hours. If you didn't create this account, please ignore this email.
               <br><br>
-              Need help? Contact our support team at support@galax.app
+              Need help? Contact our support team at support@galaxcivicnetwork.me
             </p>
           </div>
         </div>
