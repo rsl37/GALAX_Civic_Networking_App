@@ -205,11 +205,12 @@ export const corsConfig = {
         'http://127.0.0.1:5173'
       ] : []),
       
-      // Production origins
+      // Production origins - Supporting both domains
       ...(isProduction ? [
-        'https://galax-app.com',
-        'https://www.galax-app.com',
-        'https://app.galax-network.org'
+        'https://galax-civic-networking.vercel.app',
+        'https://galaxcivicnetwork.me',
+        'https://www.galaxcivicnetwork.me',
+        'https://staging.galaxcivicnetwork.me'
       ] : []),
       
       // Primary environment-specific origins
