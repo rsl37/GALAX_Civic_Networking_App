@@ -8,6 +8,8 @@
     "build": "vite build && tsc --project tsconfig.server.json",
     "start": "tsx watch scripts/dev.ts",
     "test": "vitest run",
+    "test:api": "vitest --run tests/api",
+    "test:socket": "vitest --run tests/socket",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
