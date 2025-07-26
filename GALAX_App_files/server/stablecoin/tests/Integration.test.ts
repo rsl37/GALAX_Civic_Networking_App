@@ -1,16 +1,17 @@
 /**
- * Stablecoin Service Integration Tests
- * Tests the complete stablecoin service integration
+ * Vitest Integration Tests for Stablecoin Service
+ * Converted from custom test runner to standard vitest format
  */
 
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { StablecoinService } from '../StablecoinService.js';
 import { DEFAULT_STABLECOIN_CONFIG } from '../StablecoinContract.js';
 import { DEFAULT_ORACLE_CONFIG } from '../PriceOracle.js';
 
-class IntegrationTestRunner {
-  private service: StablecoinService;
+describe('StablecoinService Integration', () => {
+  let service: StablecoinService;
 
-  constructor() {
+  beforeEach(() => {
     // Create test service with faster intervals for testing
     const testConfig = {
       ...DEFAULT_STABLECOIN_CONFIG,
@@ -23,147 +24,101 @@ class IntegrationTestRunner {
       updateInterval: 2000 // 2 seconds for testing
     };
     
-    this.service = new StablecoinService(testConfig, testOracleConfig);
-  }
+    service = new StablecoinService(testConfig, testOracleConfig);
+  });
 
-  async runTests(): Promise<void> {
-    console.log('🔄 Running stablecoin service integration tests...\n');
+  afterEach(() => {
+    if (service) {
+      service.stop();
+    }
+  });
 
-    try {
-      await this.testServiceStartup();
-      await this.testMetricsRetrieval();
-      await this.testManualRebalance();
-      await this.testMarketShockSimulation();
-      await this.testConfigurationUpdates();
-      
-      console.log('\n✅ All integration tests completed successfully!');
-    } catch (error) {
-      console.error('\n❌ Integration test failed:', error);
-    } finally {
-      this.service.stop();
-    }
-  }
+  test('should start service successfully', async () => {
+    await service.start();
+    
+    const status = service.getStatus();
+    expect(status.isRunning).toBe(true);
+  });
 
-  private async testServiceStartup(): Promise<void> {
-    console.log('🚀 Testing service startup...');
+  test('should retrieve metrics successfully', async () => {
+    await service.start();
     
-    await this.service.start();
+    const metrics = service.getMetrics();
     
-    const status = this.service.getStatus();
-    if (!status.isRunning) {
-      throw new Error('Service should be running after start()');
-    }
+    expect(metrics.stability).toBeTruthy();
+    expect(metrics.supply).toBeTruthy();
+    expect(metrics.price).toBeTruthy();
+    expect(metrics.oracle).toBeTruthy();
     
-    console.log('✅ Service started successfully');
-  }
+    expect(typeof metrics.stability.currentPrice).toBe('number');
+    expect(typeof metrics.supply.totalSupply).toBe('number');
+  });
 
-  private async testMetricsRetrieval(): Promise<void> {
-    console.log('📊 Testing metrics retrieval...');
+  test('should perform manual rebalance', async () => {
+    await service.start();
     
-    const metrics = this.service.getMetrics();
-    
-    if (!metrics.stability || !metrics.supply || !metrics.price || !metrics.oracle) {
-      throw new Error('Metrics should include all required sections');
-    }
-    
-    if (typeof metrics.stability.currentPrice !== 'number') {
-      throw new Error('Current price should be a number');
-    }
-    
-    if (typeof metrics.supply.totalSupply !== 'number') {
-      throw new Error('Total supply should be a number');
-    }
-    
-    console.log('✅ Metrics retrieved successfully');
-    console.log(`   Current price: $${metrics.stability.currentPrice.toFixed(4)}`);
-    console.log(`   Total supply: ${metrics.supply.totalSupply.toFixed(0)}`);
-    console.log(`   Stability score: ${metrics.stability.stabilityScore.toFixed(1)}`);
-  }
-
-  private async testManualRebalance(): Promise<void> {
-    console.log('⚖️ Testing manual rebalance...');
-    
-    // First set a price that should trigger rebalancing
-    this.service.setPrice(1.05); // 5% above peg
+    // Set a price that should trigger rebalancing
+    service.setPrice(1.05); // 5% above peg
     
     // Wait a moment for price to propagate
-    await this.sleep(1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const adjustment = await this.service.performRebalance();
+    const adjustment = await service.performRebalance();
     
-    if (adjustment && adjustment.action !== 'none') {
-      console.log('✅ Manual rebalance executed successfully');
-      console.log(`   Action: ${adjustment.action}`);
-      console.log(`   Amount: ${adjustment.amount.toFixed(2)}`);
-    } else {
-      console.log('ℹ️ No rebalance needed (price within tolerance)');
-    }
-  }
+    // Should either return an adjustment object or null (if no adjustment needed)
+    expect(adjustment === null || (adjustment && typeof adjustment.action === 'string')).toBe(true);
+  });
 
-  private async testMarketShockSimulation(): Promise<void> {
-    console.log('💥 Testing market shock simulation...');
+  test('should simulate market shock', async () => {
+    await service.start();
     
-    const initialMetrics = this.service.getMetrics();
+    const initialMetrics = service.getMetrics();
     const initialPrice = initialMetrics.stability.currentPrice;
     
     // Simulate moderate market shock
-    this.service.simulateMarketShock(0.1); // 10% severity
+    service.simulateMarketShock(0.1); // 10% severity
     
     // Wait for shock to propagate
-    await this.sleep(1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const postShockMetrics = this.service.getMetrics();
+    const postShockMetrics = service.getMetrics();
     const newPrice = postShockMetrics.stability.currentPrice;
     
-    if (Math.abs(newPrice - initialPrice) < 0.001) {
-      console.log('ℹ️ Market shock had minimal impact (price stability)');
-    } else {
-      console.log('✅ Market shock simulated successfully');
-      console.log(`   Price changed from $${initialPrice.toFixed(4)} to $${newPrice.toFixed(4)}`);
-    }
-  }
+    // Price should either change or remain stable depending on shock impact
+    expect(typeof newPrice).toBe('number');
+    expect(newPrice).toBeGreaterThan(0);
+  });
 
-  private async testConfigurationUpdates(): Promise<void> {
-    console.log('⚙️ Testing configuration updates...');
+  test('should update configuration', async () => {
+    await service.start();
     
     // Update stablecoin config
-    this.service.updateConfig({
+    service.updateConfig({
       toleranceBand: 0.03, // Change to 3%
       maxSupplyChange: 0.08 // Change to 8%
     });
     
     // Update oracle config
-    this.service.updateOracleConfig({
+    service.updateOracleConfig({
       updateInterval: 3000 // Change to 3 seconds
     });
     
-    console.log('✅ Configuration updates completed');
-  }
+    // Should complete without errors
+    expect(true).toBe(true);
+  });
 
-  private async testSupplyHistory(): Promise<void> {
-    console.log('📈 Testing supply history...');
+  test('should retrieve supply history', async () => {
+    await service.start();
     
-    const history = await this.service.getSupplyHistory(5);
+    const history = await service.getSupplyHistory(5);
     
-    console.log('✅ Supply history retrieved successfully');
-    console.log(`   Found ${history.length} recent adjustments`);
+    expect(Array.isArray(history)).toBe(true);
+    expect(history.length).toBeGreaterThanOrEqual(0);
     
     if (history.length > 0) {
       const latest = history[0];
-      console.log(`   Latest adjustment: ${latest.action} ${latest.amount.toFixed(2)}`);
+      expect(latest.action).toBeTruthy();
+      expect(typeof latest.amount).toBe('number');
     }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-}
-
-// Export for external use
-export { IntegrationTestRunner };
-
-// Run tests if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const runner = new IntegrationTestRunner();
-  runner.runTests().catch(console.error);
-}
+  });
+});

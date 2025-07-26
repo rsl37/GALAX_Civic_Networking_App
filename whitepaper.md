@@ -101,6 +101,11 @@ GALAX addresses these challenges by providing:
   - Kysely ORM (SQLite, upgradable to other DBs)  
   - REST API and WebSocket endpoints
 
+- **Hosting & Deployment:**  
+  - **Production Host**: Vercel platform for optimal performance and scalability
+  - **Prototype History**: Initially developed using instance.so/build for rapid iteration
+  - **Infrastructure**: Global CDN, automatic SSL/TLS, GitHub integration
+
 - **Web3 Integration:**  
   - WalletConnect/EIP-1193  
   - On-chain reputation & token mechanics (future phases)
@@ -226,7 +231,20 @@ See `IMPLEMENTATION_STATUS.md` and `TECHNICAL_INTERFACE_DESIGN_ASSESSMENT.md` fo
 
 ---
 
-## 15. Conclusion
+## 15. License & Legal Framework
+
+GALAX is licensed under the **PolyForm Shield License 1.0.0**, which provides:
+
+- **Broad Usage Rights**: Freedom to use, modify, and distribute the software
+- **Commercial Protection**: Prevents direct competition while allowing derivative works
+- **Open Development**: Encourages community contributions and transparency
+- **Legal Clarity**: Well-defined terms for both individual and organizational use
+
+This licensing approach balances open-source principles with sustainable project development, ensuring GALAX can grow as a community-driven platform while maintaining its core mission and values.
+
+---
+
+## 16. Conclusion
 
 GALAX is an ambitious, open civic networking platform for the web3 era.  
 By combining real-time connectivity, decentralized identity, gamified impact, and democratic governance, GALAX aims to catalyze a new wave of social collaboration and collective action.

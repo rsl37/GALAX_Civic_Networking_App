@@ -143,6 +143,29 @@ export const validateRegistration = [
     return true;
   }),
   
+  body('phone')
+    .optional()
+    .matches(/^\+?[\d\s\-\(\)]+$/)
+    .withMessage('Invalid phone number format')
+    .isLength({ min: 10, max: 20 })
+    .withMessage('Phone number must be between 10 and 20 characters')
+    .escape(), // XSS protection
+    
+  // Custom validation to ensure either email+password, phone+password, or walletAddress
+  body().custom((value, { req }) => {
+    const { email, phone, password, walletAddress } = req.body;
+    
+    if (!email && !phone && !walletAddress) {
+      throw new Error('Either email, phone number, or wallet address is required');
+    }
+    
+    if ((email || phone) && !password) {
+      throw new Error('Password is required when registering with email or phone');
+    }
+    
+    return true;
+  }),
+  
   handleValidationErrors
 ];
 

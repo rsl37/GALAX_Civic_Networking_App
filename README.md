@@ -156,8 +156,10 @@ For detailed analysis, see [`MERGE_CONFLICT_STATUS_REPORT.md`](MERGE_CONFLICT_ST
 
 ## 📜 License
 
-This project is for demonstration, planning, and assessment purposes.  
-For production licensing and terms, see `LICENSE` (to be added).
+This project is licensed under the **PolyForm Shield License 1.0.0**.  
+See the [LICENSE](LICENSE) file for complete terms and conditions.
+
+The PolyForm Shield license allows for broad usage while protecting against direct competition with the software.
 
 ---
 
@@ -168,7 +170,19 @@ For production licensing and terms, see `LICENSE` (to be added).
 
 ---
 
-## 🚀 Deployment & Domain Configuration
+## 🚀 Deployment & Hosting
+
+### Production Hosting Transition
+The GALAX Civic Networking App has transitioned from its prototype hosting environment to production:
+
+- **Prototype Phase**: Initially developed and tested using instance.so/build
+- **Production Phase**: Now hosted on **Vercel** for optimal performance, scalability, and reliability
+
+This transition enables enhanced features including:
+- Improved SSL/TLS security
+- Global CDN distribution
+- Automatic deployments from GitHub
+- Enhanced performance monitoring
 
 ### Custom Domain SSL Setup
 If you're experiencing SSL errors with the custom domain, refer to our comprehensive guide:
