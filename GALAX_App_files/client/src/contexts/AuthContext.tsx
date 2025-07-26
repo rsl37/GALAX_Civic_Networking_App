@@ -22,9 +22,9 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   loginWithWallet: (walletAddress: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (identifier: string, password: string, username: string) => Promise<void>;
   registerWithWallet: (walletAddress: string, username: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -156,14 +156,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     try {
+      // Determine if identifier is email or phone
+      const isEmail = identifier.includes('@');
+      const requestBody = isEmail 
+        ? { email: identifier, password }
+        : { phone: identifier, password };
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(requestBody),
       });
 
       const apiData = await parseApiResponse(response);
@@ -210,14 +216,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (identifier: string, password: string, username: string) => {
     try {
+      // Determine if identifier is email or phone
+      const isEmail = identifier.includes('@');
+      const requestBody = isEmail 
+        ? { email: identifier, password, username }
+        : { phone: identifier, password, username };
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, username }),
+        body: JSON.stringify(requestBody),
       });
 
       const apiData = await parseApiResponse(response);
