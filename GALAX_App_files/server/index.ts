@@ -583,7 +583,13 @@ app.post('/api/auth/login', authLimiter, accountLockoutMiddleware, validateLogin
     });
   } catch (error) {
     console.error('❌ Login error:', error);
-    throw error;
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Internal server error',
+        statusCode: 500
+      }
+    });
   }
 });
 

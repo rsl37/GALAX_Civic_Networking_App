@@ -133,7 +133,7 @@ export const validateRegistration = [
     }
     
     if ((email || phone) && !password) {
-      throw new Error('Password is required when registering with email or phone number');
+      throw new Error('Password is required when registering with email or phone');
     }
     
     if (email && phone) {
@@ -181,6 +181,7 @@ export const validateLogin = [
     .optional()
     .isMobilePhone('any')
     .withMessage('Please provide a valid phone number')
+    .escape() // XSS protection
     .matches(/^\+?[\d\s\-\(\)]+$/)
     .withMessage('Invalid phone number format')
     .trim()
@@ -201,7 +202,7 @@ export const validateLogin = [
     const { email, phone, password, walletAddress } = req.body;
     
     if (!email && !phone && !walletAddress) {
-      throw new Error('Either email, phone number, or wallet address is required');
+      throw new Error('Either email, phone, or wallet address is required');
     }
     
     if ((email || phone) && !password) {

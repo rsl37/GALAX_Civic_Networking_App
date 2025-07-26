@@ -22,9 +22,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (identifier: string, password: string) => Promise<void>;
-  loginWithWallet: (walletAddress: string) => Promise<void>;
-  register: (identifier: string, password: string, username: string) => Promise<void>;
   login: (emailOrPhone: string, password: string) => Promise<void>;
   loginWithWallet: (walletAddress: string) => Promise<void>;
   register: (emailOrPhone: string, password: string, username: string, signupMethod?: 'email' | 'phone') => Promise<void>;
