@@ -138,6 +138,11 @@ export const validateRegistration = [
     
     if (email && phone) {
       throw new Error('Please use either email or phone number, not both');
+    }
+    
+    return true;
+  }),
+  
   body('phone')
     .optional()
     .matches(/^\+?[\d\s\-\(\)]+$/)
@@ -176,7 +181,6 @@ export const validateLogin = [
     .optional()
     .isMobilePhone('any')
     .withMessage('Please provide a valid phone number')
-    .escape(), // XSS protection
     .matches(/^\+?[\d\s\-\(\)]+$/)
     .withMessage('Invalid phone number format')
     .trim(),
@@ -205,13 +209,6 @@ export const validateLogin = [
     
     if (email && phone) {
       throw new Error('Please use either email or phone number, not both');
-    
-    if (!email && !phone && !walletAddress) {
-      throw new Error('Either email, phone, or wallet address is required');
-    }
-    
-    if ((email || phone) && !password) {
-      throw new Error('Password is required for email/phone login');
     }
     
     return true;
