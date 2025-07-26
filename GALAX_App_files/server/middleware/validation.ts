@@ -183,7 +183,8 @@ export const validateLogin = [
     .withMessage('Please provide a valid phone number')
     .matches(/^\+?[\d\s\-\(\)]+$/)
     .withMessage('Invalid phone number format')
-    .trim(),
+    .trim()
+    .escape(), // XSS protection
     
   body('password')
     .optional()

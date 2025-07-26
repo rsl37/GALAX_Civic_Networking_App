@@ -30,8 +30,9 @@ export function RegisterPage() {
 
     try {
       // Format phone number with country code if it's a phone signup
+      const identifier = signupMethod === 'email' ? email : `${countryCode}${phone.replace(/^[\+\s0]+/, '').replace(/\s/g, '')}`;
       const identifier = signupMethod === 'email' ? email : `${countryCode}${phone.replace(/^[\+\s0]+/, '')}`;
-      await register(identifier, password, username);
+      await register(identifier, password, username, signupMethod);
       navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
